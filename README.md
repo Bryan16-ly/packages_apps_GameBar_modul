@@ -57,81 +57,63 @@ GameBar is a comprehensive real-time performance monitoring overlay for Android 
 ## Requirements
 
 - Android 13 (API 33) or higher
-- System-level permissions (privileged app)
-- LineageOS or AOSP-based ROM
+- KernelSU, Magisk, or APatch (for the system-support module)
+- Root access to flash the module and grant permissions
 
 ## Building
 
 ### Prerequisites
 
-- AOSP/LineageOS build environment
-- Android SDK Platform 33+
-- Soong build system
+- JDK 17
+- Android SDK Platform 35 (platform + build-tools)
+- `ANDROID_HOME` environment variable or `local.properties` pointing to the SDK
 
-### Integration into Device Tree
+### Build APK + Module
 
-1. **Clone the repository** into your ROM source:
+This fork builds with Gradle, so no AOSP/LineageOS source tree is required:
+
+```bash
+# Builds both the standalone APK and the flashable module
+bash build_module.sh
+```
+
+Outputs:
+
+- `out/GameBar.apk` — standalone APK
+- `out/GameBar-Module-v1.0.zip` — KernelSU / Magisk / APatch module
+
+Individual tasks:
+
+```bash
+bash ./gradlew copyApk        # APK only       -> out/GameBar.apk
+bash ./gradlew packageModule  # APK + module   -> out/GameBar-Module-v1.0.zip
+```
+
+### Hardware paths
+
+Default sysfs paths live in `res/values/config.xml`. GameBar also auto-detects many nodes at runtime via `SysfsDetector`, so most devices work without changes. Edit `res/values/config.xml` only if your device uses different paths.
+
+## Installation
+
+The app and the root module are installed separately.
+
+1. **Flash the module** (`out/GameBar-Module-v1.0.zip`) with KernelSU, Magisk, or APatch, then reboot. The module applies SELinux rules, makes the required sysfs nodes readable (read-only `0644`), and grants runtime permissions/appops after boot.
+
+2. **Install the APK** independently:
    ```bash
-   git clone https://github.com/kenway214/packages_apps_GameBar.git /packages/apps/GameBar -b main
+   bash install_apk.sh
    ```
-
-2. **Include in device makefile**:
-   
-   Add to your `device.mk`:
-   ```makefile
-   # GameBar Performance Overlay
-   $(call inherit-product, packages/apps/GameBar/gamebar.mk)
-   ```
-
-3. **Create device-specific overlay** (IMPORTANT):
-   
-   Create the overlay directory structure:
+   or manually:
    ```bash
-   mkdir -p device/<vendor>/<device>/overlay/packages/apps/GameBar/res/values
+   adb install -r out/GameBar.apk
    ```
-   
-   Create `device/<vendor>/<device>/overlay/packages/apps/GameBar/res/values/config.xml`:
-   
-   **Example overlay configuration:** [View config.xml example](LINK_HERE)
+   If you install the APK manually after the module has already booted, run `bash install_apk.sh` or reboot once so the module can grant permissions.
 
-4. **Configure hardware paths**:
-   
-   Edit your device overlay `config.xml`:
-   
-   ```xml
-   <resources>
-       <!-- Find your device's thermal zones -->
-       <!-- Run: adb shell "ls /sys/class/thermal/thermal_zone*/type" -->
-       
-       <!-- GPU temperature path -->
-       <string name="config_gpu_temp_path">/sys/class/kgsl/kgsl-3d0/temp</string>
-       
-       <!-- RAM temperature path -->
-       <string name="config_ram_temp_path">/sys/class/thermal/thermal_zone78/temp</string>
-       
-       <!-- Adjust dividers if needed (usually 1000 for millidegrees, 10 for decidegrees) -->
-       <integer name="config_cpu_temp_divider">1000</integer>
-   </resources>
-   ```
-
-5. **Customize init.rc** (if needed):
-   
-   Edit `packages/apps/GameBar/init/init.gamebar.rc` to match your device's hardware paths.
-   Ensure permissions are set for all sysfs nodes used by GameBar.
-
-6. **Build**:
-   ```bash
-   # Clean build (recommended for first build)
-   m clean
-   m GameBar
-   
-   # Or build entire ROM
-   brunch <device>
-   ```
+The APK (`com.android.gamebar.fork`) stays installed and launches even when the module is disabled or removed. Without the module, metrics that require root/sysfs access show as "N/A".
 
 ## Finding Device-Specific Paths
 
-Use these ADB commands to find the correct paths for your device:
+Use these ADB commands to verify or adapt paths for your device:
 
 ```bash
 # Find CPU thermal zones
@@ -201,38 +183,45 @@ All sessions are saved under `Documents/GameBar/FPSRecordings/{package}/`, with 
 
 ## SELinux Policy
 
-GameBar includes SELinux policies for:
-- Access to sysfs nodes (thermal, kgsl, drm)
-- Overlay window permissions
-- System service interactions
-- File provider for CSV and PNG sharing
+The root module ships `module/sepolicy.rule`, which grants the app read access to:
 
-Policies are automatically included via `sepolicy/SEPolicy.mk`.
+- Thermal sysfs (`sysfs_thermal`)
+- Graphics / KGSL sysfs (`vendor_sysfs_graphics`, `vendor_sysfs_kgsl`)
+- Battery and USB supply sysfs
+- `/proc/stat`
+
+No ROM rebuild is required; KernelSU / Magisk / APatch applies the rules at boot. The `sepolicy/` and `gamebar.mk` files are legacy ROM-build leftovers and are not used by the standalone build.
 
 ## Permissions
 
-Required permissions (granted automatically as system app):
-- `SYSTEM_ALERT_WINDOW` - Overlay display
-- `PACKAGE_USAGE_STATS` - Foreground app detection for auto-recording
-- `WRITE_EXTERNAL_STORAGE` - Recording CSV storage
-- `ACCESS_SURFACE_FLINGER` - FPS measurement
+The module (`module/service.sh`) and `install_apk.sh` grant or allow:
+
+- `SYSTEM_ALERT_WINDOW` (appops) - Overlay display
+- `PACKAGE_USAGE_STATS` / `GET_USAGE_STATS` (appops) - Foreground app detection for auto-recording
+- `WRITE_EXTERNAL_STORAGE`, `READ_EXTERNAL_STORAGE`, `MANAGE_EXTERNAL_STORAGE` - Recording CSV storage
+- `ACCESS_FPS_COUNTER` - FPS measurement
 - `WRITE_SECURE_SETTINGS` - Configuration persistence
+- `POST_NOTIFICATIONS` - Recording notification
+
+With the module installed these are applied automatically after boot. If you install the APK manually, run `bash install_apk.sh` (it grants them) or grant them yourself via `adb`/root.
 
 ## Troubleshooting
 
 ### Overlay not showing
 - Check overlay permission in Settings → Apps → GameBar
+- Make sure the root module is installed, enabled, and the device has been rebooted
 - Verify SELinux is not blocking (check `adb logcat | grep avc`)
-- Ensure init.rc permissions are applied (`adb shell ls -l /sys/class/...`)
+- Ensure the sysfs nodes are readable (`adb shell ls -l /sys/class/...`)
 
 ### Metrics showing "N/A"
-- Verify sysfs paths in overlay config.xml match your device
+- Install the root module and reboot; without it, sysfs reads may be denied
+- Verify paths in `res/values/config.xml` match your device (or rely on auto-detection)
 - Check file permissions: `adb shell cat /sys/class/thermal/thermal_zone*/temp`
 - Review logcat for file access errors
 
 ### Temperature values incorrect
-- Adjust divider values in config.xml
-- Most devices use 1000 (millidegrees) or 10 (decidegrees)
+- Adjust divider values in `res/values/config.xml`
+- Most devices use 1000 (millidegrees) or 10 (decidegrees); auto-detection usually handles this
 - Test: `adb shell cat <temp_path>` and divide manually
 
 ### Recording issues
@@ -241,10 +230,11 @@ Required permissions (granted automatically as system app):
 - For manual recording, enable **Recording bubble** and tap the play button
 - Recordings are saved even when the overlay is hidden; the bubble can run independently
 
-### Build errors
-- Ensure `org.lineageos.settings.resources` is available in your ROM
-- Check SettingsLib is included in build
-- Verify all resource files are present in res/ directory
+### Build / module errors
+- Ensure JDK 17 and Android SDK 35 are installed, with `local.properties` pointing to the SDK
+- Make sure `libs/hidden-api.jar` exists (compileOnly dependency)
+- Run `bash ./gradlew clean` before rebuilding
+- The flashable module is generated at `out/GameBar-Module-v1.0.zip`
 
 ## Contributing
 
