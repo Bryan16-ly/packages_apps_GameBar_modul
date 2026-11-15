@@ -8,7 +8,6 @@ package com.android.gamebar
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.os.UserHandle
 import android.provider.Settings
 import androidx.preference.PreferenceManager
 
@@ -19,11 +18,10 @@ class GameBarToggleReceiver : BroadcastReceiver() {
         val enabled = intent.getBooleanExtra(EXTRA_ENABLED, false)
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
         prefs.edit().putBoolean("game_bar_enable", enabled).apply()
-        Settings.System.putIntForUser(
+        Settings.System.putInt(
             context.contentResolver,
             "game_bar_enabled",
-            if (enabled) 1 else 0,
-            UserHandle.USER_CURRENT
+            if (enabled) 1 else 0
         )
         
         val gameBar = GameBar.getInstance(context)

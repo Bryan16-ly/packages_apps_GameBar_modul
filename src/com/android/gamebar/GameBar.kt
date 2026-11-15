@@ -39,7 +39,6 @@ import java.util.*
 import android.content.ComponentName
 import android.content.ServiceConnection
 import android.os.IBinder
-import android.os.UserHandle
 import com.android.systemui.screenrecord.IRemoteRecording
 import com.android.systemui.screenrecord.IRecordingCallback
 
@@ -1367,12 +1366,12 @@ class GameBar private constructor(context: Context) {
     
     private fun bindScreenRecorder() {
         try {
-            isRecorderBound = context.bindServiceAsUser(Intent().apply {
+            isRecorderBound = context.bindService(Intent().apply {
                 component = ComponentName(
                     "com.android.systemui",
                     "com.android.systemui.screenrecord.RecordingService"
                 )
-            }, recorderConnection, Context.BIND_AUTO_CREATE, UserHandle.CURRENT)
+            }, recorderConnection, Context.BIND_AUTO_CREATE)
         } catch (e: Exception) {
             android.util.Log.e("GameBar", "Failed to bind screen recorder: ${e.message}")
             isRecorderBound = false

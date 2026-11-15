@@ -1,0 +1,20 @@
+# SELinux policy rules for GameBar (untrusted app domain)
+# Grants read access to hardware sysfs and proc metrics
+
+allow untrusted_app sysfs_thermal { file dir } { read open getattr search }
+allow untrusted_app sysfs { file dir } { read open getattr ioctl search }
+allow untrusted_app vendor_sysfs_graphics { file dir } { read open getattr search }
+allow untrusted_app vendor_sysfs_kgsl { file dir } { read open getattr search }
+allow untrusted_app vendor_sysfs_battery_supply { file dir } { read open getattr search }
+allow untrusted_app vendor_sysfs_usb_supply { file dir } { read open getattr search }
+allow untrusted_app proc_stat file { read open getattr }
+allow untrusted_app vendor_sysfs_kgsl_gpuclk file { read open getattr }
+
+allow untrusted_app_all sysfs_thermal { file dir } { read open getattr search }
+allow untrusted_app_all sysfs { file dir } { read open getattr ioctl search }
+allow untrusted_app_all vendor_sysfs_graphics { file dir } { read open getattr search }
+allow untrusted_app_all vendor_sysfs_kgsl { file dir } { read open getattr search }
+allow untrusted_app_all vendor_sysfs_battery_supply { file dir } { read open getattr search }
+allow untrusted_app_all vendor_sysfs_usb_supply { file dir } { read open getattr search }
+allow untrusted_app_all proc_stat file { read open getattr }
+allow untrusted_app_all vendor_sysfs_kgsl_gpuclk file { read open getattr }

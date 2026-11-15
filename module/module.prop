@@ -1,0 +1,6 @@
+id=gamebar_fork
+name=GameBar (Fork)
+version=v1.0
+versionCode=1
+author=Bryan16
+description=KernelSU system support module for GameBar overlay: grants SELinux policies and sysfs hardware access (FPS, CPU/GPU, RAM, thermals). APK is installed independently.

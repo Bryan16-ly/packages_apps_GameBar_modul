@@ -12,4 +12,10 @@
     <color name="gamebar_default_bg_color">#FF0D1117</color>
     <color name="gamebar_default_title_color">#FF9FCEDE</color>
     <color name="gamebar_default_value_color">#FFFFB347</color>
+
+    <!-- Slider & Expressive theme colors -->
+    <color name="settingslib_expressive_color_slider_track_active">#FF3D82F6</color>
+    <color name="settingslib_expressive_color_slider_track_inactive">#40808080</color>
+    <color name="settingslib_expressive_color_slider_thumb">#FF3D82F6</color>
+    <color name="settingslib_expressive_color_slider_halo">#333D82F6</color>
 </resources>
