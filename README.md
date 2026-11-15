@@ -46,21 +46,11 @@ GameBar is a comprehensive real-time performance monitoring overlay for Android 
   <img src="readme_resources/ingame_06.png" width="250" />
 </p>
 
-### FPS Recording & Bubble
-<p align="center">
-  <img src="readme_resources/fps_recording.svg" width="720" alt="FPS recording flow: bubble, saved session, and FPS Record detail" />
-</p>
-<p align="center">
-  <img src="readme_resources/recording_bubble.svg" width="720" alt="Recording bubble play and stop states" />
-</p>
-
 ## Requirements
 
 - Android 13 (API 33) or higher
 - KernelSU, Magisk, or APatch (for the system-support module)
 - Root access to flash the module and grant permissions
-
-## Building
 
 ### Prerequisites
 
