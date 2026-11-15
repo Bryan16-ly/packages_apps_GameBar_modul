@@ -22,5 +22,14 @@ on boot
     # RAM frequency path (adjust paths)
     chown system system /sys/devices/system/cpu/bus_dcvs/DDR/cur_freq
     chmod 0660 /sys/devices/system/cpu/bus_dcvs/DDR/cur_freq
+
+on property:vendor.post_boot.parsed=1
+    # CPU temperature path (adjust thermal zone number)
+    chown system system /sys/class/thermal/thermal_zone48/temp
+    chmod 0660 /sys/class/thermal/thermal_zone48/temp
+
+    # RAM temperature path (adjust thermal zone number)
+    chown system system /sys/class/thermal/thermal_zone27/temp
+    chmod 0660 /sys/class/thermal/thermal_zone27/temp
     
     
