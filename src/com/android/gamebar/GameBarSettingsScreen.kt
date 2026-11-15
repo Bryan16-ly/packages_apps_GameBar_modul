@@ -735,6 +735,33 @@ fun AboutGameBarCard() {
                     Text("Guide")
                 }
             }
+
+            Text(
+                text = stringResource(R.string.fork_credit_title),
+                style = MaterialTheme.typography.titleMedium,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = stringResource(R.string.fork_credit_summary),
+                style = MaterialTheme.typography.bodySmall,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            androidx.compose.material3.Button(
+                onClick = {
+                    context.startActivity(
+                        Intent(Intent.ACTION_VIEW, Uri.parse(context.getString(R.string.fork_credit_repo_url)))
+                    )
+                }
+            ) {
+                androidx.compose.material3.Icon(
+                    painter = androidx.compose.ui.res.painterResource(id = R.drawable.brand_github),
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(stringResource(R.string.fork_credit_repo_label))
+            }
         }
     }
 }

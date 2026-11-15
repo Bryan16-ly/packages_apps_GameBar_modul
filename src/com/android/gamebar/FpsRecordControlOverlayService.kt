@@ -38,7 +38,6 @@ class FpsRecordControlOverlayService : Service() {
         private const val PREF_X = "game_bar_fps_record_control_x"
         private const val PREF_Y = "game_bar_fps_record_control_y"
         private const val SAMPLE_INTERVAL_MS = 1000L
-        private const val MONITOR_INTERVAL_MS = 700L
     }
 
     private lateinit var windowManager: WindowManager
@@ -66,20 +65,9 @@ class FpsRecordControlOverlayService : Service() {
         }
     }
 
-    private val monitorRunnable = object : Runnable {
-        override fun run() {
-            if (!isRecording) return
-            val foreground = ForegroundAppDetector.getForegroundPackageName(this@FpsRecordControlOverlayService)
-            if (foreground != recordingPackage) {
-                stopRecording(autoStop = true)
-                return
-            }
-            handler.postDelayed(this, MONITOR_INTERVAL_MS)
-        }
-    }
-
     override fun onCreate() {
         super.onCreate()
+        GameBarConfig.init(this)
         windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
     }
 
@@ -114,7 +102,7 @@ class FpsRecordControlOverlayService : Service() {
 
         if (!enabled) {
             removeBubble()
-            stopRecording(autoStop = false)
+            stopRecording()
             stopSelf()
             return START_NOT_STICKY
         }
@@ -224,7 +212,7 @@ class FpsRecordControlOverlayService : Service() {
         if (!isRecording) {
             startRecording()
         } else {
-            stopRecording(autoStop = false)
+            stopRecording()
         }
     }
 
@@ -264,16 +252,13 @@ class FpsRecordControlOverlayService : Service() {
         updateBubbleAppearance()
 
         handler.removeCallbacks(sampleRunnable)
-        handler.removeCallbacks(monitorRunnable)
         handler.post(sampleRunnable)
-        handler.post(monitorRunnable)
     }
 
-    private fun stopRecording(autoStop: Boolean) {
+    private fun stopRecording() {
         if (!isRecording) return
 
         handler.removeCallbacks(sampleRunnable)
-        handler.removeCallbacks(monitorRunnable)
 
         if (recordingPackage.isNotBlank()) {
             perAppLogManager.stopManualLoggingForApp(recordingPackage)
@@ -288,9 +273,6 @@ class FpsRecordControlOverlayService : Service() {
             GameBarFpsMeter.getInstance(this).stop()
         }
 
-        if (autoStop) {
-            Toast.makeText(this, "Recording stopped (app minimized/switched)", Toast.LENGTH_SHORT).show()
-        }
         updateBubbleAppearance()
     }
 
@@ -325,7 +307,7 @@ class FpsRecordControlOverlayService : Service() {
     override fun onDestroy() {
         handler.removeCallbacksAndMessages(null)
         removeBubble()
-        stopRecording(autoStop = false)
+        stopRecording()
         super.onDestroy()
     }
 

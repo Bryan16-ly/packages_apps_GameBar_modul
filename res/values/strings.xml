@@ -162,4 +162,11 @@
     <string name="fps_record_empty">No FPS record sessions found</string>
     <string name="fps_record_stats_title">Session Summary</string>
 
+    <!-- Fork Credits -->
+    <string name="fork_credit_title">Fork Module by Bryan16-ly</string>
+    <string name="fork_credit_summary">GameBar standalone fork module</string>
+    <string name="fork_credit_repo_url">https://github.com/Bryan16-ly/packages_apps_GameBar_modul</string>
+    <string name="fork_credit_repo_label">Bryan16-ly / GameBar Modul</string>
+    <string name="fork_credit_footer">Fork Module by Bryan16-ly\nBryan16-ly / packages_apps_GameBar_modul</string>
+
 </resources>

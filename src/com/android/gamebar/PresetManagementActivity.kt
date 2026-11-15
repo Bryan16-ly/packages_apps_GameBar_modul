@@ -55,6 +55,15 @@ class PresetManagementActivity : CollapsingToolbarBaseActivity() {
         emptyTextView = findViewById(R.id.tv_empty_message)
         
         emptyTextView.text = getString(R.string.preset_no_presets_desc)
+
+        findViewById<TextView>(R.id.tv_fork_credit).setOnClickListener {
+            startActivity(
+                Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse(getString(R.string.fork_credit_repo_url))
+                )
+            )
+        }
     }
 
     private fun setupRecyclerView() {
