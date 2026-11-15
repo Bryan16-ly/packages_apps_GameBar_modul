@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#111827"/>
+      <stop offset="100%" stop-color="#0b1220"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1f2937"/>
+      <stop offset="100%" stop-color="#172033"/>
+    </linearGradient>
+    <linearGradient id="green2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2e7d32"/>
+      <stop offset="100%" stop-color="#1b5e20"/>
+    </linearGradient>
+    <linearGradient id="chart" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4ade80" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#4ade80" stop-opacity="0.05"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="420" rx="32" fill="url(#bg2)"/>
+  <text x="600" y="64" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" font-weight="bold" fill="#ffffff">FPS Recording Flow</text>
+  <text x="600" y="100" text-anchor="middle" font-family="Arial, sans-serif" font-size="19" fill="#9ca3af">Bubble → saved session → FPS Record detail</text>
+
+  <!-- Step 1: bubble -->
+  <g>
+    <rect x="70" y="150" width="300" height="200" rx="24" fill="url(#card)" stroke="#334155" stroke-width="2"/>
+    <rect x="165" y="185" width="110" height="60" rx="30" fill="url(#green2)" stroke="#4caf50" stroke-width="4"/>
+    <polygon points="212,198 212,232 241,215" fill="#ffffff"/>
+    <text x="220" y="286" text-anchor="middle" font-family="Arial, sans-serif" font-size="21" font-weight="bold" fill="#ffffff">Recording Bubble</text>
+    <text x="220" y="316" text-anchor="middle" font-family="Arial, sans-serif" font-size="17" fill="#94a3b8">Tap ▶ to start · ⏹ to stop</text>
+  </g>
+
+  <g stroke="#64748b" stroke-width="5" fill="none">
+    <line x1="386" y1="250" x2="430" y2="250"/>
+    <polyline points="416,232 434,250 416,268"/>
+  </g>
+
+  <!-- Step 2: saved session -->
+  <g>
+    <rect x="450" y="150" width="300" height="200" rx="24" fill="url(#card)" stroke="#334155" stroke-width="2"/>
+    <rect x="540" y="183" width="120" height="72" rx="10" fill="#0f172a" stroke="#38bdf8" stroke-width="3"/>
+    <rect x="552" y="197" width="96" height="8" rx="4" fill="#38bdf8"/>
+    <rect x="552" y="213" width="72" height="8" rx="4" fill="#1d4ed8"/>
+    <rect x="552" y="229" width="84" height="8" rx="4" fill="#1d4ed8"/>
+    <text x="600" y="286" text-anchor="middle" font-family="Arial, sans-serif" font-size="21" font-weight="bold" fill="#ffffff">Session Saved</text>
+    <text x="600" y="316" text-anchor="middle" font-family="Arial, sans-serif" font-size="17" fill="#94a3b8">JSON + CSV per session</text>
+  </g>
+
+  <g stroke="#64748b" stroke-width="5" fill="none">
+    <line x1="766" y1="250" x2="810" y2="250"/>
+    <polyline points="796,232 814,250 796,268"/>
+  </g>
+
+  <!-- Step 3: FPS Record detail -->
+  <g>
+    <rect x="830" y="150" width="300" height="200" rx="24" fill="url(#card)" stroke="#334155" stroke-width="2"/>
+    <polyline points="890,300 930,270 970,282 1010,238 1050,252 1090,214"
+              fill="none" stroke="#4ade80" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <polygon points="890,300 930,270 970,282 1010,238 1050,252 1090,214 1090,306 890,306"
+             fill="url(#chart)"/>
+    <text x="980" y="286" text-anchor="middle" font-family="Arial, sans-serif" font-size="21" font-weight="bold" fill="#ffffff">FPS Record</text>
+    <text x="980" y="316" text-anchor="middle" font-family="Arial, sans-serif" font-size="17" fill="#94a3b8">Summary · Graphs · Export</text>
+  </g>
+</svg>

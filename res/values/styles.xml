@@ -11,4 +11,11 @@
     <item name="android:layout_height">315dp</item>
   </style>
 
+  <style name="Theme.SubSettingsBase.Expressive" parent="Theme.Material3.DayNight.NoActionBar">
+    <item name="colorPrimary">@color/settingslib_expressive_color_slider_track_active</item>
+    <item name="android:statusBarColor">@android:color/transparent</item>
+    <item name="android:navigationBarColor">@android:color/transparent</item>
+    <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
+  </style>
+
 </resources>

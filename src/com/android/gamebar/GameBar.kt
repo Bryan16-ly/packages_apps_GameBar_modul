@@ -32,7 +32,6 @@ import com.android.gamebar.R
 import java.io.BufferedReader
 import java.io.FileReader
 import java.io.IOException
-import java.text.SimpleDateFormat
 import java.util.*
 
 class GameBar private constructor(context: Context) {
@@ -123,7 +122,6 @@ class GameBar private constructor(context: Context) {
     private var downY = 0f
 
     private var gestureDetector: GestureDetector? = null
-    private var doubleTapCaptureEnabled = true
     private var singleTapToggleEnabled = true
     private var bgDrawable: GradientDrawable? = null
 
@@ -141,47 +139,6 @@ class GameBar private constructor(context: Context) {
         applyBackgroundStyle()
         
         gestureDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
-            override fun onDoubleTap(e: MotionEvent): Boolean {
-                if (doubleTapCaptureEnabled) {
-                    val dataExport = GameDataExport.getInstance()
-                    val perAppLogManager = dataExport.getPerAppLogManager()
-                    val currentPackage = ForegroundAppDetector.getForegroundPackageName(context)
-                    
-                    if (dataExport.getLoggingMode() == GameDataExport.LoggingMode.PER_APP) {
-                        // Per-app mode: Handle double-tap for manual logging
-                        
-                        // Check if this app already has auto-logging enabled
-                        if (perAppLogManager.isAppLoggingEnabled(context, currentPackage)) {
-                            Toast.makeText(context, "This app has auto-logging enabled. Logs are saved automatically.", Toast.LENGTH_SHORT).show()
-                            return true
-                        }
-                        
-                        // Check if manually logging for this app
-                        if (perAppLogManager.isAppLoggingActive(currentPackage)) {
-                            // Stop manual logging
-                            perAppLogManager.stopManualLoggingForApp(currentPackage)
-                            Toast.makeText(context, "Manual logging stopped and saved", Toast.LENGTH_SHORT).show()
-                        } else {
-                            // Start manual logging
-                            perAppLogManager.startManualLoggingForApp(currentPackage)
-                        }
-                        return true
-                    }
-                    
-                    // Global mode: Original behavior
-                    if (dataExport.isCapturing()) {
-                        dataExport.stopCapture()
-                        dataExport.exportDataToCsv()
-                        Toast.makeText(context, "Capture Stopped and Data Exported", Toast.LENGTH_SHORT).show()
-                    } else {
-                        dataExport.startCapture()
-                        Toast.makeText(context, "Capture Started", Toast.LENGTH_SHORT).show()
-                    }
-                    return true
-                }
-                return super.onDoubleTap(e)
-            }
-
             override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
                 if (singleTapToggleEnabled) {
                     overlayFormat = if (overlayFormat == "full") "minimal" else "full"
@@ -234,7 +191,6 @@ class GameBar private constructor(context: Context) {
         showRamSpeed = prefs.getBoolean("game_bar_ram_speed_enable", false)
         showRamTemp = prefs.getBoolean("game_bar_ram_temp_enable", false)
 
-        doubleTapCaptureEnabled = prefs.getBoolean("game_bar_doubletap_capture", true)
         singleTapToggleEnabled = prefs.getBoolean("game_bar_single_tap_toggle", true)
 
         updateSplitMode(prefs.getString("game_bar_split_mode", "side_by_side") ?: "side_by_side")
@@ -459,7 +415,7 @@ class GameBar private constructor(context: Context) {
         // Create fresh views each time
         val statViews = mutableListOf<View>()
 
-        // 1) FPS - Always collect for logging
+        // 1) FPS
         val fpsVal = GameBarFpsMeter.getInstance(context).getFps()
         val fpsStr = if (fpsVal >= 0) String.format(Locale.getDefault(), "%.0f", fpsVal) else "N/A"
         if (showFps) {
@@ -476,7 +432,7 @@ class GameBar private constructor(context: Context) {
             statViews.add(createStatLine("Frame Time", if (frameTimeStr == "N/A") "N/A" else "${frameTimeStr}ms"))
         }
 
-        // 2) Battery temp - Always collect for logging
+        // 2) Battery temp
         var batteryTempStr = "N/A"
         val (path, divider) = GameBarConfig.getBatteryTempConfig()
         if (path != null) {
@@ -495,7 +451,7 @@ class GameBar private constructor(context: Context) {
             statViews.add(createStatLine("Temp", "${batteryTempStr}°C"))
         }
 
-        // 3) CPU usage - Always collect for logging
+        // 3) CPU usage
         var cpuUsageStr = "N/A"
         cpuUsageStr = GameBarCpuInfo.getCpuUsage()
         if (showCpuUsage) {
@@ -503,18 +459,12 @@ class GameBar private constructor(context: Context) {
             statViews.add(createStatLine("CPU", display))
         }
 
-        // 4) CPU freq - Always collect for logging
+        // 4) CPU freq
         var cpuClockStr = "N/A"
         if (showCpuClock) {
             val freqs = GameBarCpuInfo.getCpuFrequencies()
             if (freqs.isNotEmpty()) {
                 statViews.add(buildCpuFreqView(freqs))
-                cpuClockStr = freqs.joinToString("; ")
-            }
-        } else {
-            // Still collect even if not shown, for potential logging
-            val freqs = GameBarCpuInfo.getCpuFrequencies()
-            if (freqs.isNotEmpty()) {
                 cpuClockStr = freqs.joinToString("; ")
             }
         }
@@ -524,9 +474,6 @@ class GameBar private constructor(context: Context) {
         if (showCpuTemp) {
             cpuTempStr = GameBarCpuInfo.getCpuTemp()
             statViews.add(createStatLine("CPU Temp", if (cpuTempStr == "N/A") "N/A" else "${cpuTempStr}°C"))
-        } else {
-            // Still collect even if not shown
-            cpuTempStr = GameBarCpuInfo.getCpuTemp()
         }
 
         // 6) RAM usage
@@ -534,9 +481,6 @@ class GameBar private constructor(context: Context) {
         if (showRam) {
             ramStr = GameBarMemInfo.getRamUsage()
             statViews.add(createStatLine("RAM", if (ramStr == "N/A") "N/A" else "$ramStr MB"))
-        } else {
-            // Still collect even if not shown
-            ramStr = GameBarMemInfo.getRamUsage()
         }
 
         // 6.1) RAM speed
@@ -544,9 +488,6 @@ class GameBar private constructor(context: Context) {
         if (showRamSpeed) {
             ramSpeedStr = GameBarMemInfo.getRamSpeed()
             statViews.add(createStatLine("RAM Freq", ramSpeedStr))
-        } else {
-            // Still collect even if not shown
-            ramSpeedStr = GameBarMemInfo.getRamSpeed()
         }
 
         // 6.2) RAM temp
@@ -554,26 +495,23 @@ class GameBar private constructor(context: Context) {
         if (showRamTemp) {
             ramTempStr = GameBarMemInfo.getRamTemp()
             statViews.add(createStatLine("RAM Temp", ramTempStr))
-        } else {
-            // Still collect even if not shown
-            ramTempStr = GameBarMemInfo.getRamTemp()
         }
 
-        // 7) GPU usage - Always collect for logging
+        // 7) GPU usage
         var gpuUsageStr = "N/A"
         gpuUsageStr = GameBarGpuInfo.getGpuUsage()
         if (showGpuUsage) {
             statViews.add(createStatLine("GPU", if (gpuUsageStr == "N/A") "N/A" else "${gpuUsageStr}%"))
         }
 
-        // 8) GPU clock - Always collect for logging
+        // 8) GPU clock
         var gpuClockStr = "N/A"
         gpuClockStr = GameBarGpuInfo.getGpuClock()
         if (showGpuClock) {
             statViews.add(createStatLine("GPU Freq", if (gpuClockStr == "N/A") "N/A" else "${gpuClockStr}MHz"))
         }
 
-        // 9) GPU temp - Always collect for logging
+        // 9) GPU temp
         var gpuTempStr = "N/A"
         gpuTempStr = GameBarGpuInfo.getGpuTemp()
         if (showGpuTemp) {
@@ -599,43 +537,6 @@ class GameBar private constructor(context: Context) {
             for (view in statViews) {
                 layout.addView(view)
             }
-        }
-
-        if (GameDataExport.getInstance().isCapturing()) {
-            val dateTime = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
-            val pkgName = ForegroundAppDetector.getForegroundPackageName(context)
-            val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-            
-            // Check logging parameters and use N/A if disabled
-            val logFps = if (prefs.getBoolean(GameBarLogFragment.PREF_LOG_FPS, true)) fpsStr else "N/A"
-            val logFrameTime = if (prefs.getBoolean(GameBarLogFragment.PREF_LOG_FRAME_TIME, true)) frameTimeStr else "N/A"
-            val logBatteryTemp = if (prefs.getBoolean(GameBarLogFragment.PREF_LOG_BATTERY_TEMP, true)) batteryTempStr else "N/A"
-            val logCpuUsage = if (prefs.getBoolean(GameBarLogFragment.PREF_LOG_CPU_USAGE, true)) cpuUsageStr else "N/A"
-            val logCpuClock = if (prefs.getBoolean(GameBarLogFragment.PREF_LOG_CPU_CLOCK, true)) cpuClockStr else "N/A"
-            val logCpuTemp = if (prefs.getBoolean(GameBarLogFragment.PREF_LOG_CPU_TEMP, true)) cpuTempStr else "N/A"
-            val logRam = if (prefs.getBoolean(GameBarLogFragment.PREF_LOG_RAM, true)) ramStr else "N/A"
-            val logRamSpeed = if (prefs.getBoolean(GameBarLogFragment.PREF_LOG_RAM_SPEED, true)) ramSpeedStr else "N/A"
-            val logRamTemp = if (prefs.getBoolean(GameBarLogFragment.PREF_LOG_RAM_TEMP, true)) ramTempStr else "N/A"
-            val logGpuUsage = if (prefs.getBoolean(GameBarLogFragment.PREF_LOG_GPU_USAGE, true)) gpuUsageStr else "N/A"
-            val logGpuClock = if (prefs.getBoolean(GameBarLogFragment.PREF_LOG_GPU_CLOCK, true)) gpuClockStr else "N/A"
-            val logGpuTemp = if (prefs.getBoolean(GameBarLogFragment.PREF_LOG_GPU_TEMP, true)) gpuTempStr else "N/A"
-
-            GameDataExport.getInstance().addOverlayData(
-                    dateTime,
-                    pkgName,
-                    logFps,
-                    logFrameTime,
-                    logBatteryTemp,
-                    logCpuUsage,
-                    logCpuClock,
-                    logCpuTemp,
-                    logRam,
-                    logRamSpeed,
-                    logRamTemp,
-                    logGpuUsage,
-                    logGpuClock,
-                    logGpuTemp
-            )
         }
 
             layoutParams?.let { lp ->
@@ -956,10 +857,6 @@ class GameBar private constructor(context: Context) {
     
     fun setLongPressThresholdMs(ms: Long) {
         longPressThresholdMs = ms
-    }
-
-    fun setDoubleTapCaptureEnabled(enabled: Boolean) {
-        doubleTapCaptureEnabled = enabled
     }
 
     fun setSingleTapToggleEnabled(enabled: Boolean) {

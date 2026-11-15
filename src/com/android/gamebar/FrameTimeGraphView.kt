@@ -19,6 +19,8 @@ class FrameTimeGraphView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
 
+    private val density = resources.displayMetrics.density
+
     private val linePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.parseColor("#FFC107")  // Amber for frame time
         strokeWidth = 3f
@@ -50,17 +52,22 @@ class FrameTimeGraphView @JvmOverloads constructor(
     }
 
     private val avgLinePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#FF9800")
+        color = Color.parseColor("#4CAF50")
         strokeWidth = 2f
         style = Paint.Style.STROKE
         pathEffect = DashPathEffect(floatArrayOf(10f, 10f), 0f)
     }
 
     private val targetLinePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#4CAF50")  // Green for 60fps target (16.67ms)
+        color = Color.parseColor("#2196F3")  // Blue for 60fps target (16.67ms)
         strokeWidth = 2f
         style = Paint.Style.STROKE
         pathEffect = DashPathEffect(floatArrayOf(10f, 10f), 0f)
+    }
+
+    private val spikePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#F44336")
+        style = Paint.Style.FILL
     }
 
     private var frameTimeData: List<Pair<Long, Double>> = emptyList()
@@ -110,6 +117,7 @@ class FrameTimeGraphView @JvmOverloads constructor(
         drawTargetLine(canvas, graphWidth, graphHeight)  // 60fps target line
         drawAverageLine(canvas, graphWidth, graphHeight)
         drawGraph(canvas, graphWidth, graphHeight)
+        drawSpikes(canvas, graphWidth, graphHeight)
         drawLegend(canvas)
     }
 
@@ -215,6 +223,25 @@ class FrameTimeGraphView @JvmOverloads constructor(
         canvas.drawPath(path, linePaint)
     }
 
+    private fun drawSpikes(canvas: Canvas, graphWidth: Float, graphHeight: Float) {
+        if (frameTimeData.size < 2) return
+
+        val startTime = frameTimeData.first().first
+        val endTime = frameTimeData.last().first
+        val timeDuration = max(endTime - startTime, 1L)
+        val threshold = max(avgFrameTime * 1.5, 33.3)
+        val radius = 3.5f * density
+
+        frameTimeData.forEach { (timestamp, frameTime) ->
+            if (frameTime >= threshold) {
+                val x = padding + ((timestamp - startTime).toFloat() / timeDuration) * graphWidth
+                val normalized = max(minFrameTime, min(maxFrameTime, frameTime))
+                val y = (topPadding + graphHeight * (1 - normalized / maxFrameTime)).toFloat()
+                canvas.drawCircle(x, y, radius, spikePaint)
+            }
+        }
+    }
+
     private fun drawLegend(canvas: Canvas) {
         val legendX = padding
         val legendY = 20f
@@ -232,6 +259,10 @@ class FrameTimeGraphView @JvmOverloads constructor(
         // 60fps target line
         canvas.drawLine(legendX + spacing * 2.5f, legendY, legendX + spacing * 2.5f + lineLength, legendY, targetLinePaint)
         canvas.drawText("60fps", legendX + spacing * 2.5f + lineLength + 10f, legendY + 8f, textPaint)
+
+        // Spike marker
+        canvas.drawCircle(legendX + spacing * 3.5f + 10f, legendY, 5f, spikePaint)
+        canvas.drawText("Spike", legendX + spacing * 3.5f + 22f, legendY + 8f, textPaint)
 
         // Reset text size
         textPaint.textSize = 28f

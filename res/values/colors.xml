@@ -5,10 +5,17 @@
 -->
 
 <resources>
-    <color name="ic_launcher_background">@android:color/system_accent1_600</color>
+    <color name="ic_launcher_background">#141B2D</color>
     <color name="ic_gamebar_launcher_background">#141B2D</color>
     
     <!-- Default colors for ColorPicker -->
     <color name="gamebar_default_title_color">#FFFFFFFF</color>
     <color name="gamebar_default_value_color">#FF4CAF50</color>
+    <color name="disabled_text_color">#66808080</color>
+
+    <!-- Slider & Expressive theme colors -->
+    <color name="settingslib_expressive_color_slider_track_active">#FF3D82F6</color>
+    <color name="settingslib_expressive_color_slider_track_inactive">#40808080</color>
+    <color name="settingslib_expressive_color_slider_thumb">#FF3D82F6</color>
+    <color name="settingslib_expressive_color_slider_halo">#333D82F6</color>
 </resources>

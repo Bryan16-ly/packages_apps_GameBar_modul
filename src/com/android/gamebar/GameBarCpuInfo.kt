@@ -17,11 +17,15 @@ object GameBarCpuInfo {
     private var prevIdle = -1L
     private var prevTotal = -1L
 
-    fun getCpuUsage(): String {
+    fun getCpuUsage(): String =
+        getCpuUsagePercent()?.toInt()?.toString() ?: "N/A"
+
+    @Synchronized
+    fun getCpuUsagePercent(): Double? {
         val line = readLine(GameBarConfig.procStatPath)
-        if (line == null || !line.startsWith("cpu ")) return "N/A"
+        if (line == null || !line.startsWith("cpu ")) return null
         val parts = line.split("\\s+".toRegex())
-        if (parts.size < 8) return "N/A"
+        if (parts.size < 8) return null
 
         return try {
             val user = parts[1].toLong()
@@ -38,17 +42,17 @@ object GameBarCpuInfo {
             if (prevTotal != -1L && total != prevTotal) {
                 val diffTotal = total - prevTotal
                 val diffIdle = idle - prevIdle
-                val usage = 100 * (diffTotal - diffIdle) / diffTotal
                 prevTotal = total
                 prevIdle = idle
-                usage.toString()
+                if (diffTotal <= 0) return null
+                (100.0 * (diffTotal - diffIdle) / diffTotal).coerceIn(0.0, 100.0)
             } else {
                 prevTotal = total
                 prevIdle = idle
-                "N/A"
+                null
             }
         } catch (e: NumberFormatException) {
-            "N/A"
+            null
         }
     }
 
@@ -86,24 +90,43 @@ object GameBarCpuInfo {
         return result
     }
 
-    fun getCpuTemp(): String {
-        val (path, divider) = GameBarConfig.getCpuTempConfig()
-        if (path == null) return "N/A"
-        
-        val line = readLine(path) ?: return "N/A"
-        val cleanLine = line.trim()
-        return try {
-            val raw = cleanLine.toFloat()
-            val celsius = raw / divider.toFloat()
-            // Sanity check: CPU temp should be between 0 and 150°C
-            if (celsius > 0f && celsius < 150f) {
-                String.format(Locale.getDefault(), "%.1f", celsius)
-            } else {
-                "N/A"
+    /**
+     * Frekuensi tiap core dalam MHz. Mengembalikan map core-index -> MHz untuk
+     * core yang online dan terbaca. Map kosong berarti tidak tersedia.
+     */
+    fun getCpuFrequenciesMhz(): Map<Int, Int> {
+        val basePath = GameBarConfig.cpuBasePath ?: return emptyMap()
+        val cpuDir = File(basePath)
+        val files = cpuDir.listFiles { _, name -> name.matches(Regex("cpu\\d+")) }
+            ?: return emptyMap()
+
+        val result = sortedMapOf<Int, Int>()
+        files.sortedBy { extractCpuNumber(it) }.forEach { cpu ->
+            val index = extractCpuNumber(cpu)
+            if (index < 0) return@forEach
+            val freqStr = readLine("${cpu.absolutePath}/cpufreq/scaling_cur_freq")
+            val khz = freqStr?.trim()?.toLongOrNull() ?: return@forEach
+            if (khz > 0) {
+                val mhz = (khz / 1000).toInt()
+                if (mhz > 0) result[index] = mhz
             }
-        } catch (e: NumberFormatException) {
-            "N/A"
         }
+        return result
+    }
+
+    fun getCpuTemp(): String {
+        val celsius = getCpuTemperatureC() ?: return "N/A"
+        return String.format(Locale.getDefault(), "%.1f", celsius)
+    }
+
+    fun getCpuTemperatureC(): Double? {
+        val (path, divider) = GameBarConfig.getCpuTempConfig()
+        if (path == null) return null
+
+        val raw = readLine(path)?.trim()?.toFloatOrNull() ?: return null
+        val celsius = raw / divider.toFloat()
+        // Sanity check: CPU temp should be between 0 and 150°C
+        return if (celsius > 0f && celsius < 150f) celsius.toDouble() else null
     }
 
     private fun extractCpuNumber(cpuFolder: File): Int {

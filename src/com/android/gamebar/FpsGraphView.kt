@@ -10,6 +10,10 @@ import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
 
@@ -18,6 +22,10 @@ class FpsGraphView @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
+
+    private val density = resources.displayMetrics.density
+    private val scaledDensity = resources.displayMetrics.scaledDensity
+    private val timestampFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
 
     private val linePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.parseColor("#4CAF50")
@@ -44,13 +52,13 @@ class FpsGraphView @JvmOverloads constructor(
     }
 
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#FFFFFF")
-        textSize = 28f
+        color = Color.parseColor("#B0B0B0")
+        textSize = 10f * scaledDensity
         typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
     }
 
     private val avgLinePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#FF9800")
+        color = Color.parseColor("#4CAF50")
         strokeWidth = 2f
         style = Paint.Style.STROKE
         pathEffect = DashPathEffect(floatArrayOf(10f, 10f), 0f)
@@ -66,25 +74,24 @@ class FpsGraphView @JvmOverloads constructor(
     private var fpsData: List<Pair<Long, Double>> = emptyList()
     private var avgFps: Double = 0.0
     private var fps1PercentLow: Double = 0.0
-    private val maxFps = 144.0  // Absolute max for display
-    private val functionalMaxFps = 120.0  // Treat 120 as 100%
-    private val minFps = 0.0
+    private var yMax: Double = 60.0
     
-    private val padding = 80f
-    private val topPadding = 40f
-    private val bottomPadding = 80f  // Increased for axis label
+    private val padding = 46f * density
+    private val topPadding = 22f * density
+    private val bottomPadding = 46f * density
 
     fun setData(data: List<Pair<Long, Double>>, avg: Double, low1Percent: Double) {
         this.fpsData = data
         this.avgFps = avg
         this.fps1PercentLow = low1Percent
+        updateYMax()
         
         // Update gradient shader with actual view height
         post {
             fillPaint.shader = LinearGradient(
                 0f, topPadding, 0f, height - bottomPadding,
-                Color.parseColor("#804CAF50"),
-                Color.parseColor("#104CAF50"),
+                Color.parseColor("#404CAF50"),
+                Color.parseColor("#054CAF50"),
                 Shader.TileMode.CLAMP
             )
             invalidate()
@@ -132,33 +139,29 @@ class FpsGraphView @JvmOverloads constructor(
     }
 
     private fun drawGrid(canvas: Canvas, graphWidth: Float, graphHeight: Float) {
-        // Draw horizontal grid lines (FPS) - using 120 as functional max (100%)
-        val fpsSteps = listOf(0, 30, 60, 90, 120, 144)
-        
-        for (fps in fpsSteps) {
-            // Map FPS values so 120 appears at 100% height
-            val normalizedFps = if (fps <= 120) {
-                fps.toFloat()
-            } else {
-                // Squeeze 120-144 into the remaining space
-                120f + (fps - 120) * 0.2f
-            }
-            val y = (topPadding + graphHeight * (1 - normalizedFps / (functionalMaxFps.toFloat() + 4.8f))).toFloat()
-            
-            // Grid line
+        // Draw horizontal grid lines with a dynamic FPS range.
+        for (i in 0..4) {
+            val fraction = i / 4.0
+            val fps = yMax * fraction
+            val y = (topPadding + graphHeight * (1.0 - fraction)).toFloat()
+
             canvas.drawLine(padding, y, padding + graphWidth, y, gridPaint)
-            
-            // Label
-            val label = "$fps"
-            canvas.drawText(label, padding - 60f, y + 10f, textPaint)
+
+            val label = String.format(Locale.getDefault(), "%.0f", fps)
+            canvas.drawText(
+                label,
+                padding - textPaint.measureText(label) - 8f * density,
+                y + 4f * density,
+                textPaint
+            )
         }
 
         // Draw Y-axis label (far left, separate from numbers)
         canvas.save()
-        canvas.rotate(-90f, 15f, height / 2f)
+        canvas.rotate(-90f, 10f * density, height / 2f)
         val yLabel = "FPS"
         val yLabelWidth = textPaint.measureText(yLabel)
-        canvas.drawText(yLabel, (width - yLabelWidth) / 2, 30f, textPaint)  // Position at x=30 (far left)
+        canvas.drawText(yLabel, (width - yLabelWidth) / 2, 14f * density, textPaint)
         canvas.restore()
 
         // Draw time labels on X-axis (higher up - first line)
@@ -167,24 +170,34 @@ class FpsGraphView @JvmOverloads constructor(
             val endTime = fpsData.last().first
             val duration = endTime - startTime
 
-            // Draw start time
-            canvas.drawText("0s", padding, height - bottomPadding + 25f, textPaint)
+            val xTickY = height - bottomPadding + 16f * density
 
-            // Draw middle time
-            val middleTime = formatDuration(duration / 2)
+            val startLabel = formatTimestamp(startTime)
+            canvas.drawText(startLabel, padding, xTickY, textPaint)
+
+            val middleLabel = formatTimestamp(startTime + duration / 2)
             val middleX = padding + graphWidth / 2
-            canvas.drawText(middleTime, middleX - 30f, height - bottomPadding + 25f, textPaint)
+            canvas.drawText(
+                middleLabel,
+                middleX - textPaint.measureText(middleLabel) / 2f,
+                xTickY,
+                textPaint
+            )
 
-            // Draw end time
-            val endTimeStr = formatDuration(duration)
-            val endX = padding + graphWidth - textPaint.measureText(endTimeStr)
-            canvas.drawText(endTimeStr, endX, height - bottomPadding + 25f, textPaint)
+            val endLabel = formatTimestamp(endTime)
+            val endX = padding + graphWidth - textPaint.measureText(endLabel)
+            canvas.drawText(endLabel, endX, xTickY, textPaint)
         }
 
         // Draw X-axis label (second line - below time values)
         val xLabel = "Time"
         val xLabelWidth = textPaint.measureText(xLabel)
-        canvas.drawText(xLabel, (width - xLabelWidth) / 2, height - bottomPadding + 55f, textPaint)
+        canvas.drawText(
+            xLabel,
+            (width - xLabelWidth) / 2,
+            height - bottomPadding + 34f * density,
+            textPaint
+        )
     }
 
     private fun drawGraph(canvas: Canvas, graphWidth: Float, graphHeight: Float) {
@@ -200,15 +213,7 @@ class FpsGraphView @JvmOverloads constructor(
         fpsData.forEachIndexed { index, (timestamp, fps) ->
             val x = padding + ((timestamp - startTime).toFloat() / timeDuration) * graphWidth
             
-            // Normalize FPS using 120 as functional max
-            val normalizedFps = max(minFps, min(maxFps, fps))
-            val mappedFps = if (normalizedFps <= 120.0) {
-                normalizedFps.toFloat()
-            } else {
-                // Squeeze 120-144 range into remaining space
-                120f + (normalizedFps.toFloat() - 120f) * 0.2f
-            }
-            val y = (topPadding + graphHeight * (1 - mappedFps / (functionalMaxFps.toFloat() + 4.8f))).toFloat()
+            val y = fpsToY(fps, graphHeight)
 
             if (index == 0) {
                 path.moveTo(x, y)
@@ -233,64 +238,64 @@ class FpsGraphView @JvmOverloads constructor(
     }
 
     private fun drawAverageLine(canvas: Canvas, graphWidth: Float, graphHeight: Float) {
-        // Map average line position
-        val normalizedAvg = max(minFps, min(maxFps, avgFps))
-        val mappedAvg = if (normalizedAvg <= 120.0) {
-            normalizedAvg.toFloat()
-        } else {
-            120f + (normalizedAvg.toFloat() - 120f) * 0.2f
-        }
-        val y = (topPadding + graphHeight * (1 - mappedAvg / (functionalMaxFps.toFloat() + 4.8f))).toFloat()
-        
+        val y = fpsToY(avgFps, graphHeight)
         canvas.drawLine(padding, y, padding + graphWidth, y, avgLinePaint)
     }
 
     private fun draw1PercentLowLine(canvas: Canvas, graphWidth: Float, graphHeight: Float) {
-        // Map 1% low line position
-        val normalizedLow = max(minFps, min(maxFps, fps1PercentLow))
-        val mappedLow = if (normalizedLow <= 120.0) {
-            normalizedLow.toFloat()
-        } else {
-            120f + (normalizedLow.toFloat() - 120f) * 0.2f
-        }
-        val y = (topPadding + graphHeight * (1 - mappedLow / (functionalMaxFps.toFloat() + 4.8f))).toFloat()
-        
+        val y = fpsToY(fps1PercentLow, graphHeight)
         canvas.drawLine(padding, y, padding + graphWidth, y, lowLinePaint)
+    }
+
+    private fun fpsToY(fps: Double, graphHeight: Float): Float {
+        val normalized = (fps.coerceIn(0.0, yMax)) / yMax
+        return (topPadding + graphHeight * (1.0 - normalized)).toFloat()
+    }
+
+    private fun updateYMax() {
+        val peak = max(
+            fpsData.maxOfOrNull { it.second } ?: 0.0,
+            max(avgFps, fps1PercentLow)
+        )
+        if (peak <= 0.0) {
+            yMax = 60.0
+            return
+        }
+
+        val padded = peak * 1.1
+        val step = when {
+            padded <= 30.0 -> 5.0
+            padded <= 60.0 -> 10.0
+            padded <= 180.0 -> 20.0
+            padded <= 360.0 -> 30.0
+            else -> 60.0
+        }
+        yMax = ceil(padded / step) * step
+        if (yMax < 30.0) yMax = 30.0
     }
 
     private fun drawLegend(canvas: Canvas) {
         val legendX = padding
-        val legendY = 20f
-        val lineLength = 40f
-        val spacing = 150f
+        val legendY = 11f * density
+        val lineLength = 13f * density
+        val spacing = 60f * density
+        val textOffset = 4f * density
 
         // FPS line
         canvas.drawLine(legendX, legendY, legendX + lineLength, legendY, linePaint)
-        canvas.drawText("FPS", legendX + lineLength + 10f, legendY + 8f, textPaint.apply { textSize = 24f })
+        canvas.drawText("FPS", legendX + lineLength + textOffset, legendY + 4f * density, textPaint)
 
         // Average line
         canvas.drawLine(legendX + spacing, legendY, legendX + spacing + lineLength, legendY, avgLinePaint)
-        canvas.drawText("Avg", legendX + spacing + lineLength + 10f, legendY + 8f, textPaint)
+        canvas.drawText("Avg", legendX + spacing + lineLength + textOffset, legendY + 4f * density, textPaint)
 
         // 1% Low line
         canvas.drawLine(legendX + spacing * 2, legendY, legendX + spacing * 2 + lineLength, legendY, lowLinePaint)
-        canvas.drawText("1% Low", legendX + spacing * 2 + lineLength + 10f, legendY + 8f, textPaint)
-
-        // Reset text size
-        textPaint.textSize = 28f
+        canvas.drawText("1% Low", legendX + spacing * 2 + lineLength + textOffset, legendY + 4f * density, textPaint)
     }
 
-    private fun formatDuration(durationMs: Long): String {
-        val seconds = durationMs / 1000
-        val minutes = seconds / 60
-        val hours = minutes / 60
-
-        return when {
-            hours > 0 -> String.format("%dh%dm", hours, minutes % 60)
-            minutes > 0 -> String.format("%dm%ds", minutes, seconds % 60)
-            else -> String.format("%ds", seconds)
-        }
-    }
+    private fun formatTimestamp(timestampMs: Long): String =
+        timestampFormat.format(Date(timestampMs))
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val desiredWidth = 800

@@ -1,11 +1,11 @@
 # 🎮 GameBar User Guide
-### Real-time Performance Monitoring & Logging
+### Real-time Performance Monitoring & FPS Recording
 
 ---
 
 ## 📊 What is GameBar?
 
-GameBar is a **real-time performance overlay** that displays FPS, CPU/GPU usage, temperatures, RAM stats, and more while you use apps. It includes powerful **logging and analytics** features to record and analyze performance data.
+GameBar is a **real-time performance overlay** that displays FPS, CPU/GPU usage, temperatures, RAM stats, and more while you use apps. It also includes **FPS Recording** with a floating recording bubble, session history, detailed graphs, and CSV/PNG export.
 
 **Perfect for:**
 - 🎮 Gaming performance testing & optimization
@@ -16,537 +16,269 @@ GameBar is a **real-time performance overlay** that displays FPS, CPU/GPU usage,
 
 ---
 
-## 🚀 Quick Start Guide
+## 🚀 Quick Start
 
-### Step 1: Enable GameBar Overlay
-1. Open **Settings** app
-2. Navigate to **System** → **GameBar**
-3. Turn **ON** the **"Enable GameBar Overlay"** switch
-4. Grant overlay permission if asked
+### Step 1: Enable the GameBar Overlay
+1. Open the **GameBar** app (standalone APK: app drawer; module installs may also show it in **Settings → System → GameBar**)
+2. Turn **ON** the **"Enable GameBar Overlay"** switch
+3. Grant overlay permission if asked
 
-✅ You'll see the GameBar overlay on your screen!
+✅ You'll see the GameBar overlay on your screen.
 
-> **⚠️ IMPORTANT:** The GameBar overlay **MUST be ON** to collect performance data. Logging cannot work when the overlay is disabled.
+> **📦 Module vs standalone:** This fork works both as a KernelSU/Magisk module and as a standalone APK. If the app is not exposed in **Settings → System → GameBar**, open it from the app drawer. When shared storage is unavailable, recordings automatically fall back to app-specific storage.
 
-### Step 2: Choose Your Logging Mode
+> **⚙️ Settings layout:** **Recording** is located below **Per-App GameBar**. It contains **Auto-record selected apps**, **Recording Apps**, **Recording bubble**, and **FPS Record**.
 
-GameBar offers **3 logging modes** to fit your needs:
+### Step 2: Choose How to Record
 
-| Mode | Icon | Best For | How It Works |
-|------|------|----------|--------------|
-| **Per-App** | 🎯 | Specific apps/games | Auto-logs when configured apps are in foreground |
-| **Universal** | 🌐 | All apps | Logs everything while GameBar is active |
-| **Manual** | 👆 | Quick testing | Double-tap overlay to start/stop logging |
+| Method | Best For | How It Works |
+|--------|----------|--------------|
+| **Auto-record** | Regular gaming sessions | Starts and stops automatically for selected apps |
+| **Recording bubble** | Quick manual tests | Tap the floating play/stop button |
+| **Both together** | Flexibility | Auto-record handles selected apps; the bubble is always available for manual control |
 
-### Step 3: Configure & Start Logging
-Follow the detailed guide below for your chosen mode ⬇️
+FPS Recording works even when the GameBar overlay is hidden. The bubble starts the FPS meter on its own, and sampling follows the overlay **Update Interval** setting.
 
 ---
 
-## 🎯 Mode 1: Per-App Logging (Recommended)
-**🌟 Best for tracking specific games or apps over time**
+## 🎯 FPS Recording
 
-### What it does:
-- **Automatically** starts logging when you open a configured app
-- **Automatically** stops and saves when you close the app
-- Each session saved separately with timestamp
-- Perfect for comparing performance across gaming sessions
-- Requires **GameBar overlay to be ON**
+### What Gets Recorded
+Each sample contains the metrics available on your device:
 
-### How to Set Up:
+- FPS and frame time
+- Battery, CPU, GPU, and RAM temperature
+- CPU usage and per-core clock speed
+- RAM usage and memory frequency
+- GPU usage and clock speed
+- Power draw when exposed by the device
 
-#### ⚙️ Setup (One Time)
-1. Go to **Settings** → **System** → **GameBar**
-2. Tap **"Per-App GameBar"**
-3. Tap **"Configure Apps"**
-4. Select your game/app from the list (e.g., BGMI, COD Mobile, Chrome)
-5. Enable the switch for that app
-6. Go back to GameBar main settings
-7. Tap **"GameBar Logging"**
-8. Select **"Per-App Logging"** mode
-9. **Turn ON** the main **"Enable GameBar Overlay"** switch
+### Set Up Automatic Recording
+1. Open **GameBar** → **Recording**
+2. Turn ON **Auto-record selected apps**
+3. Tap **Recording Apps**
+4. Search for an app, then turn ON its switch
+5. Go back and open the selected app
 
-#### 📱 Using It
-1. **Ensure GameBar overlay is ON** (critical requirement!)
-2. Open your configured game/app
-3. **That's it!** 🎉
+The recording starts when the app comes to the foreground and stops when you leave it.
 
-**What happens:**
-- ✅ Toast message: *"BGMI GameBar log started"*
-- GameBar collects FPS, CPU, GPU, temps, etc. while you play
-- Close the game → Toast: *"BGMI GameBar log ended"*
-- Log automatically saved with timestamp!
+> **Permission tip:** Auto-recording needs **Usage Access** so GameBar can detect the foreground app.
 
-> **⚠️ Important:** If GameBar overlay is OFF when you open the app, you'll see:
-> *"BGMI: GameBar logging enabled but GameBar overlay is OFF. Turn ON GameBar to collect logs."*
+### Record Manually With the Bubble
+1. Open **GameBar** → **Recording**
+2. Turn ON **Recording bubble**
+3. A floating bubble appears over other apps
+4. Tap the **▶ play** icon to start recording
+5. The bubble turns red and shows a **⏹ stop** icon
+6. Tap the stop icon to finish and save the session
 
-#### 📂 Viewing Your Logs
-1. Go to **Settings** → **System** → **GameBar**
-2. Tap **"Per-App GameBar"**
-3. Find your app → Tap it
-4. See all sessions with timestamps and duration!
-5. Tap any session to view detailed analytics
+You can drag the bubble anywhere; its position is remembered.
 
-**Log file location:** `/sdcard/Documents/GameBar/PerAppLogs/{package_name}/`
+### View Saved Sessions
+1. Open **GameBar** → **Recording** → **FPS Record**
+2. Tap a session to open **Recording Detail**
+3. Long-press a session to delete it
+
+Sessions are kept until you delete them. Nothing is pruned automatically.
 
 ---
 
-## 👆 Mode 2: Manual Logging (Double-Tap)
-**⚡ Best for quick tests without setup!**
+## 📈 Recording Detail
 
-### What it does:
-- Start/stop logging with double-tap gesture
-- Works in **any app** (no configuration needed)
-- Logs saved under that app's name in per-app logs
-- Great for one-time performance checks
-- Only works in **Per-App Logging mode**
+Recording Detail opens with a summary and a full metric dashboard.
 
-### How to Use:
+### Summary
+- **MAX / MIN / AVERAGE FPS**
+- **1% LOW / 0.1% LOW / 5% LOW FPS**
+- **MAX temperature** and **AVERAGE power**
 
-#### 📱 Taking a Manual Log
-1. Go to **GameBar** → **GameBar Logging** → Select **"Per-App Logging"**
-2. **Turn ON GameBar overlay** (must be ON!)
-3. Open any app (doesn't need to be configured)
-4. **Double-tap** the GameBar overlay
-   - Toast: *"AppName: Manual logging started"*
-5. Use the app normally (gaming, browsing, etc.)
-6. **Double-tap** again to stop
-   - Toast: *"Manual logging stopped and saved"*
+### Metric Cards
+Each metric shows **LATEST / AVERAGE / MIN / MAX**:
+- FPS and frame time
+- Battery temperature
+- CPU usage, CPU frequency (including per-core), and CPU temperature
+- GPU usage, GPU clock, and GPU temperature
+- RAM usage, RAM frequency, and RAM temperature
+- Power draw
 
-#### ⚠️ Important Notes:
-- **GameBar overlay must be ON** to collect data
-- If app already has auto-logging enabled, double-tap shows:
-  *"This app has auto-logging enabled. Logs are saved automatically."*
-- Manual logs and auto logs are stored in the same location
-- You can manually log apps that aren't in your configured list
+### Graphs
+- FPS and frame time
+- CPU usage and temperature
+- GPU usage, clock, and temperature
+- RAM metrics
+- Per-core CPU frequency
 
-#### 📂 Finding Your Logs
-Same location as auto logs:
-1. **GameBar** → **"Per-App GameBar"**
-2. Find the app you manually logged
-3. All sessions (auto + manual) appear together!
+### Export and Share
+Open the **⋮** menu in Recording Detail:
 
----
+| Action | Result |
+|--------|--------|
+| **Export CSV** | Saves the session as a CSV file |
+| **Export PNG** | Saves the dashboard as a PNG |
+| **Share CSV** | Shares the CSV via the system share sheet |
+| **Share PNG** | Shares the dashboard image |
 
-## 🌐 Mode 3: Universal Logging
-**📊 Best for continuous monitoring across all apps!**
-
-### What it does:
-- Records data from **ALL apps** in one continuous log
-- You control start/stop with double-tap
-- Good for multi-app benchmarks and system-wide monitoring
-- Logs everything while active (app switches included)
-
-### How to Use:
-
-#### ⚙️ Setup
-1. Go to **GameBar** → **"GameBar Logging"**
-2. Select **"Universal Logging"** mode
-
-#### 📱 Taking a Universal Log
-1. **Turn ON GameBar overlay** (required!)
-2. **Double-tap** GameBar overlay to start
-   - Toast: *"Capture Started"*
-3. Use different apps, switch between them, test anything
-4. **Double-tap** again to stop
-   - Toast: *"Capture Stopped and Data Exported"*
-
-#### 📂 Finding Your Logs
-1. **GameBar** → **"GameBar Logging"** → **"View Logs"**
-2. Universal logs are stored in: `/sdcard/Documents/GameBar/GameBar_log_{timestamp}.csv`
-3. Each log contains data from all apps used during that session
+Exported PNG files are written directly to **Pictures/GameBar/** through MediaStore.
 
 ---
 
-## 🎛️ Customizing What to Log
+## 📁 Storage
 
-### Choosing Parameters
-You can select which data to log:
+### Session Data
+- **JSON (internal):** `files/fps_recordings/<id>.json` — used by Recording Detail
+- **CSV:** `Documents/GameBar/FPSRecordings/{package}/<app>_<timestamp>_<id>.csv`
 
-1. Go to **GameBar** → **Logging**
-2. Check/uncheck parameters:
-   - ✅ FPS (Frames Per Second)
-   - ✅ Frame Time
-   - ✅ Battery Temperature
-   - ✅ CPU Usage
-   - ✅ CPU Clock Speed
-   - ✅ CPU Temperature
-   - ✅ RAM Usage
-   - ✅ RAM Speed
-   - ✅ RAM Temperature
-   - ✅ GPU Usage
-   - ✅ GPU Clock Speed
-   - ✅ GPU Temperature
+If GameBar cannot write to shared storage, the CSV falls back to app-specific external storage and then internal storage.
 
-**Tip:** By default, all are enabled. Disable what you don't need!
-
----
-
-## 📁 Understanding Your Logs
-
-### Log File Format
-Logs are saved as **CSV files** (open with Excel, Google Sheets, etc.)
-
-**Columns:**
+### File Names
 ```
-DateTime | PackageName | FPS | Frame_Time | Battery_Temp | CPU_Usage | ...
+<AppName>_<yyyyMMdd_HHmmss>_<short-id>.csv
 ```
-
-**Example:**
-```csv
-2025-01-07 14:30:52,com.tencent.ig,60,16.67,35.2,45,2016MHz,42.5,...
-2025-01-07 14:30:53,com.tencent.ig,59,16.95,35.3,47,2150MHz,43.0,...
-```
-
-### File Naming
-
-**Per-App Logs:**
-```
-{package_name}_GameBar_log_{timestamp}.csv
-
-Examples:
-📱 com.tencent.ig_GameBar_log_20250107_143052.csv (PUBG)
-🌐 com.android.chrome_GameBar_log_20250107_144530.csv (Chrome)
-```
-
-**Global Logs:**
-```
-GameBar_log_{timestamp}.csv
 
 Example:
-📊 GameBar_log_20250107_150000.csv
+```
+BGMI_20261115_143052_a1b2c3d4.csv
+```
+
+### CSV Columns
+```
+DateTime, PackageName, FPS, Frame_Time, Battery_Temp, CPU_Usage, CPU_Clock,
+CPU_Temp, RAM_Usage_MB, RAM_Usage_Pct, RAM_Speed_MHz, RAM_Temp,
+GPU_Usage, GPU_Clock_MHz, GPU_Temp, Power_W
 ```
 
 ---
 
-## 📊 Built-in Analytics & Visualization
+## 🎛️ Overlay Customization
 
-### Session Analytics (Per-App Logs Only)
+GameBar supports runtime customization through Settings:
 
-GameBar includes **powerful built-in analytics** for per-app logs! No need for external tools.
+- **Display Options:** Toggle individual metrics (FPS, CPU, GPU, RAM, temperatures)
+- **Visual Style:** Text size, colors, background transparency, corner radius, padding, item spacing
+- **Position:** Choose from predefined positions or enable draggable mode
+- **Update Interval:** 500ms, 1s, 2s, or 5s — also controls FPS recording sampling
+- **FPS Method:** New (SurfaceFlinger) or legacy (sysfs) measurement
+- **Split Mode:** Side-by-side or stacked layout
 
-#### 📈 How to View Analytics:
+### Per-App Overlay
+Configure GameBar to activate automatically for specific apps:
+1. Open **GameBar** → **Per-App GameBar** → **Configure Apps**
+2. Select apps from the list
+3. GameBar auto-enables when those apps are in the foreground
 
-1. Go to **GameBar** → **"Per-App GameBar"**
-2. Tap your app (e.g., BGMI)
-3. Tap any log session
-4. **Instant analytics popup** appears!
-
-#### 📊 What You Get:
-
-**Session Information:**
-- 📅 Date & time
-- ⏱️ Session duration
-- 📊 Total samples collected
-- 📁 File name
-
-**FPS Statistics:**
-- Max FPS, Min FPS, Average FPS
-- Variance & Standard Deviation
-- **Smoothness percentage** (consistency metric)
-- **1% Low FPS** (worst 1% of frames)
-- **0.1% Low FPS** (worst 0.1% of frames)
-- **Real-time FPS graph** with average line
-
-**Frame Time Analysis:**
-- Frame time graph (lower is better)
-- Average frame time
-- Frame time spikes visualization
-
-**CPU Metrics:**
-- Max/Min/Avg CPU usage (%)
-- Max/Min/Avg CPU temperature (°C)
-- CPU usage over time graph
-- CPU temperature over time graph
-- Per-core clock speeds graph
-
-**GPU Metrics:**
-- Max/Min/Avg GPU usage (%)
-- Max/Min/Avg GPU clock speed (MHz)
-- Max/Min/Avg GPU temperature (°C)
-- GPU usage over time graph
-- GPU clock frequency graph
-- GPU temperature graph
-
-### 💾 Export Options
-
-From the analytics popup, tap **"⋮ Actions"** to access:
-
-#### 1. **📊 Export Data (CSV)**
-- Exports the raw CSV file
-- Share via any app (WhatsApp, Email, Drive, etc.)
-- Open in Excel, Google Sheets, or any CSV viewer
-
-#### 2. **📸 Save Graphics (PNG)**
-- Saves all graphs as PNG images
-- Perfect for sharing performance screenshots
-- Includes FPS, CPU, GPU, and temperature graphs
-- Saved to: `/sdcard/Pictures/GameBar/`
-
-#### 3. **🔗 Share Log**
-- Quick share via system share sheet
-- Send to friends, forums, or developers
-- Includes CSV data file
-
-#### 4. **📂 Open External**
-- Opens log file in external CSV viewer
-- Use your preferred spreadsheet app
-- Full data access for custom analysis
-
-### 🎨 Visual Analysis Tips
-
-**Reading the Graphs:**
-- **Green line** = Average value
-- **Spikes** = Performance issues or intensive moments
-- **Flat lines** = Stable performance
-- **Drops** = Lag, stuttering, or throttling
-
-**What to Look For:**
-- ✅ **Consistent FPS** = Smooth gameplay
-- ⚠️ **FPS drops** = Stuttering/lag
-- 🔥 **Rising temps** = Thermal throttling risk
-- 📉 **1% Low FPS** = Worst-case performance
-
-### 📱 External Analysis (Optional)
-
-If you prefer external tools:
-
-#### Using Google Sheets:
-1. Export CSV from GameBar
-2. Upload to Google Drive
-3. Open with Google Sheets
-4. Create custom charts
-
-#### Using Excel:
-1. Transfer CSV to PC
-2. Open in Excel
-3. Insert → Chart → Line Chart
-4. Analyze with pivot tables
+This list is separate from **Recording Apps**, so you can record a different set of apps.
 
 ---
 
-## 🎨 Visual Examples
+## 👆 Gesture Controls
 
-### Example: Gaming Session Log
+- **Single-tap overlay:** Switch between full and minimal formats
+- **Long-press overlay:** Open GameBar settings
+- **Drag overlay:** Move it when draggable mode is enabled
 
-```
-Game: PUBG Mobile
-Duration: 30 minutes
-Result:
-
-📊 Average FPS: 58
-⚡ Max FPS: 60
-📉 Min FPS: 45 (during intense battle)
-🔥 Avg CPU Temp: 42.5°C
-🌡️ Max CPU Temp: 48.0°C
-```
-
-### Example: App Comparison
-
-```
-Comparing Browsers:
-Chrome vs Firefox vs Edge
-
-📊 Chrome: 59 FPS avg, 40% CPU
-📊 Firefox: 57 FPS avg, 38% CPU  
-📊 Edge: 60 FPS avg, 42% CPU
-```
+The recording bubble has its own controls:
+- **Tap:** Start or stop recording
+- **Drag:** Move the bubble; the position is saved
 
 ---
 
 ## ❓ Troubleshooting
 
-### ❌ "GameBar logging enabled but overlay is OFF"
-**Problem:** You enabled per-app logging, but GameBar overlay is turned off.
+### ❌ Auto-recording does not start
+**Check:**
+1. **Usage Access** is granted to GameBar
+2. The app is enabled under **Recording → Recording Apps**
+3. **Auto-record selected apps** is ON
+4. The app is actually in the foreground
 
-**Why this happens:**
-- GameBar **requires the overlay to be ON** to collect performance data
-- Without the overlay, there's no data source to log
+### ❌ Recording bubble is missing
+**Check:**
+1. **Recording bubble** is ON under **GameBar → Recording**
+2. Overlay permission is granted
+3. The app was not force-stopped after enabling the bubble
 
-**Solution:**
-1. Go to GameBar settings
-2. Turn ON **"Enable GameBar Overlay"** switch
-3. You should see the overlay appear on screen
-4. Now logging will work automatically!
+### ❌ No sessions in FPS Record
+**Check:**
+1. Recording was running long enough to collect at least one sample
+2. You tapped the **stop** icon to finish the session
+3. Auto-recording was enabled for the app you used
 
-### ❌ Double-tap doesn't start logging
-**Possible causes:**
+### ❌ FPS shows N/A while recording
+- Verify the FPS method under **FPS Measurement Method**
+- Some apps or protected surfaces do not expose frame data to SurfaceFlinger
+- Try the legacy sysfs method if your device exposes a measured FPS node
 
-1. **Double-tap gesture disabled**
-   - Go to GameBar → Overlay Gesture Controls
-   - Enable "Double-tap to capture"
+### ❌ CSV or PNG export fails
+1. Install a file manager or document provider
+2. Check available storage space
+3. For PNG, make sure the Pictures/GameBar location is writable
+4. Try **Share CSV** or **Share PNG** instead of exporting directly
 
-2. **App has auto-logging enabled**
-   - If the app is in your per-app list, it's already logging automatically
-   - You'll see: *"This app has auto-logging enabled. Logs are saved automatically."*
-   - No need to double-tap!
-
-3. **Wrong logging mode**
-   - Manual double-tap only works in **Per-App Logging mode**
-   - Check: GameBar → GameBar Logging → Select "Per-App Logging"
-
-4. **GameBar overlay is OFF**
-   - Logging requires overlay to be ON
-   - Turn on the main GameBar switch
-
-5. **Tapping too slow**
-   - Tap faster (like double-tap to unlock phone)
-
-### ❌ Can't find my logs
-**Check these locations:**
-
-**For Per-App Logs:**
-1. **In-app:** GameBar → Per-App GameBar → Select your app
-2. **File manager:** `/sdcard/Documents/GameBar/PerAppLogs/{package_name}/`
-3. Search for: `*_GameBar_log_*.csv`
-
-**For Universal Logs:**
-1. **In-app:** GameBar → GameBar Logging → View Logs
-2. **File manager:** `/sdcard/Documents/GameBar/`
-3. Search for: `GameBar_log_*.csv`
-
-### ❌ No data in log file (empty or only header)
-**Common causes:**
-
-1. **GameBar overlay was OFF during session**
-   - Solution: Turn ON overlay before logging
-
-2. **Session too short (< 2 seconds)**
-   - Solution: Log for at least 5-10 seconds to collect meaningful data
-
-3. **App crashed or force closed**
-   - Solution: Let the app close naturally or use double-tap to stop
-
-4. **Storage permission denied**
-   - Solution: Grant storage permission to GameBar in Android settings
-
-### ❌ Analytics won't open / Shows error
-**Possible causes:**
-
-1. **Corrupted log file**
-   - Try opening a different session
-   - Re-log the session
-
-2. **Log file too large**
-   - Very long sessions (>2 hours) may take time to analyze
-   - Wait for "Analyzing..." dialog to complete
-
-3. **Missing data columns**
-   - Ensure you have FPS, CPU, GPU data enabled in overlay settings
-
-### ❌ Export/Share not working
-**Solutions:**
-
-1. **No file manager app**
-   - Install a file manager (Files by Google, etc.)
-
-2. **Storage permission denied**
-   - Go to Android Settings → Apps → GameBar → Permissions
-   - Grant Storage permission
-
-3. **No app to open CSV**
-   - Install Google Sheets, Excel, or any CSV viewer
+### ❌ Temperatures or GPU values show N/A
+- The device may not expose the required sysfs/hardware nodes
+- Configure hardware paths in your device overlay (`config.xml`)
+- Check node permissions with `adb shell cat <path>`
 
 ---
 
 ## 💡 Pro Tips
 
 ### 🎮 For Gamers
-1. **Enable per-app logging** for your main games
-2. Log a few sessions to find average performance
-3. **After updates**, compare logs to see improvements/issues
-4. Share logs with devs when reporting lag
-
-### 📱 For Testers
-1. Use **global mode** to compare apps
-2. Test in identical conditions (same brightness, network, etc.)
-3. Let apps run for at least 5 minutes for accurate data
-4. **Close background apps** for cleaner results
+1. Enable **Auto-record** for your main games
+2. Record a few sessions to establish average performance
+3. After game updates, compare new sessions with older ones
+4. Share the CSV or PNG when reporting lag
 
 ### 🔥 For Thermal Testing
-1. Enable **all temperature sensors** (CPU, GPU, Battery, RAM)
-2. Run intensive tasks (gaming, video recording)
-3. Watch for **thermal throttling** (FPS drops when temp rises)
-4. Compare temperatures across different scenarios
+1. Keep all temperature metrics enabled in the overlay
+2. Record a long session under load
+3. Look for FPS drops that line up with rising temperatures
+4. Compare sessions in different environments
 
 ### ⚡ For Battery Investigation
-1. Log with GameBar overlay OFF initially
-2. Then log with overlay ON
-3. **Compare power consumption** (overlay itself uses ~1-2% battery)
-4. Find which apps drain the most
+1. Record a session with the overlay hidden
+2. Record another session with the overlay visible
+3. Compare power draw and temperature
+4. Check which apps use more CPU/GPU over time
+
+### 📈 For Reviews and Comparisons
+- Use the same **Update Interval** for every comparison
+- Let each session run at least 5 minutes
+- Close background apps for cleaner results
+- Compare 1% low and 0.1% low FPS, not just average FPS
 
 ---
 
-## 🎯 Quick Reference Card
+## 🎯 Quick Reference
 
-### Common Scenarios
-
-| I Want To... | Use This Mode | Steps |
-|--------------|---------------|-------|
-| 🎮 Log every BGMI session automatically | Per-App Auto | Configure BGMI in Per-App GameBar → Turn ON overlay → Just play! |
-| 👆 Quick one-time test of any app | Manual (Double-Tap) | Set Per-App mode → Turn ON overlay → Open app → Double-tap → Test → Double-tap |
-| 📊 Compare multiple apps in one session | Universal | Set Universal mode → Turn ON overlay → Double-tap → Switch apps → Double-tap |
-| 🔥 Check game temperatures & throttling | Per-App Auto | Enable temp sensors in overlay → Configure game → Play normally |
-| ⚡ Find which app drains battery most | Universal | Log 1 hour usage → View analytics → Check CPU/GPU usage |
-| 📈 View detailed FPS graphs & analytics | Per-App (any) | Per-App GameBar → Select app → Tap session → View analytics |
-| 📤 Share performance data with friends | Per-App (any) | Open analytics → Actions → Export CSV or Save PNG |
-| 🔍 Compare performance before/after update | Per-App Auto | Log sessions before update → Update app → Log again → Compare |
-
-### Logging Mode Comparison
-
-| Feature | Per-App Auto | Manual (Double-Tap) | Universal |
-|---------|--------------|---------------------|-----------|
-| **Setup Required** | ✅ Yes (one-time) | ❌ No | ❌ No |
-| **Auto Start/Stop** | ✅ Yes | ❌ Manual | ❌ Manual |
-| **Works in Any App** | ❌ Only configured | ✅ Yes | ✅ Yes |
-| **Separate Logs per App** | ✅ Yes | ✅ Yes | ❌ All in one |
-| **Built-in Analytics** | ✅ Yes | ✅ Yes | ⚠️ Limited |
-| **Best For** | Regular gaming | Quick tests | Multi-app comparison |
-
----
-
-## 📞 Need Help?
-
-### Still confused?
-1. Check **GAMEBAR_FIXES_SUMMARY.md** for technical details
-2. Watch in-app tutorials (if available)
-3. Post in XDA/Telegram group with screenshots
-
-### Reporting Issues?
-Include:
-1. Which method you're using (Per-App/Manual/Global)
-2. Screenshot of settings
-3. Sample log file (if generated)
-4. What you expected vs what happened
+| I Want To... | Steps |
+|--------------|-------|
+| Record every BGMI session automatically | **Recording** → enable **Auto-record selected apps** → **Recording Apps** → select BGMI |
+| Start a quick manual recording | Enable **Recording bubble** → tap **▶** → use the app → tap **⏹** |
+| View recorded sessions | **Recording** → **FPS Record** → tap a session |
+| Delete a session | **FPS Record** → long-press the session → confirm |
+| Export data | Open **Recording Detail** → **⋮** → **Export CSV** |
+| Share a dashboard image | Open **Recording Detail** → **⋮** → **Share PNG** |
+| Compare performance after an update | Record before the update, then record again after it |
 
 ---
 
 ## ✨ Summary
 
-### The Easiest Way (For Most Users):
+**The easiest workflow:**
+1. ✅ Open **GameBar** → **Recording**
+2. ✅ Turn ON **Auto-record selected apps**
+3. ✅ Open **Recording Apps** and select your games
+4. ✅ Turn ON **Recording bubble** if you want manual control
+5. ✅ Play normally, then open **FPS Record** to review results
 
-**For Automatic Logging:**
-1. ✅ Go to **GameBar** → **Per-App GameBar** → **Configure Apps**
-2. ✅ Select your favorite games/apps
-3. ✅ Go to **GameBar Logging** → Select **"Per-App Logging"**
-4. ✅ **Turn ON GameBar overlay** (main switch)
-5. ✅ **Just play your games normally**
-6. ✅ **Logs save automatically** when you close the app!
-
-**To View Your Logs:**
-1. 📊 **GameBar** → **Per-App GameBar** → Select your app
-2. 📈 Tap any session to see **detailed analytics with graphs**
-3. 💾 Export as CSV or save graphs as PNG images
-4. 🔗 Share with friends or developers
-
-### That's it! 🎉
-
-**Key Points to Remember:**
-- ⚠️ **GameBar overlay MUST be ON** to collect data
-- 🎯 Per-App mode = Automatic logging for configured apps
-- 👆 Double-tap = Manual logging for any app (in Per-App mode)
-- 🌐 Universal mode = Log everything across all apps
-- 📊 Built-in analytics = No need for external tools!
+**Key points:**
+- ▶ **Green bubble** — idle, tap to start recording
+- ⏹ **Red bubble** — recording, tap to stop and save
+- 📊 **FPS Record** — sessions, summary cards, graphs, and export
+- 📁 **Storage** — `Documents/GameBar/FPSRecordings/{package}/`
+- 🖼️ **PNG export** — saved to `Pictures/GameBar/`
+- 🗑️ Sessions stay until you delete them manually
 
 ---
 

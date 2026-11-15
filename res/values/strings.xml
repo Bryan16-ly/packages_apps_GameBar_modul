@@ -32,6 +32,87 @@
     <string name="game_bar_user_guide">User Guide</string>
     <string name="game_bar_user_guide_url">https://github.com/kenway214/packages_apps_GameBar/blob/main/GAMEBAR_USER_GUIDE.md</string>
 
+    <!-- FPS Recording -->
+    <string name="recording_category_title">Recording</string>
+    <string name="fps_bubble_title">Recording bubble</string>
+    <string name="fps_bubble_summary">Floating button to start/stop FPS recording for the current app</string>
+    <string name="fps_record_title">FPS Record</string>
+    <string name="fps_record_summary">View per-session FPS logs with summary and graphs</string>
+    <string name="fps_record_detail_title">Recording Detail</string>
+    <string name="fps_no_sessions">No recording sessions yet.\nStart a recording using the bubble or enable auto-record for selected apps.</string>
+    <string name="fps_delete_session_title">Delete Session</string>
+    <string name="fps_delete_session_message">Delete recording for %s?</string>
+    <string name="fps_delete_confirm">Delete</string>
+    <string name="fps_session_deleted">Session deleted</string>
+    <string name="fps_session_stats" formatted="false">Avg %d  Max %d  Min %d  •  %s</string>
+    <string name="fps_detail_avg">%d FPS</string>
+    <string name="fps_detail_max">%d FPS</string>
+    <string name="fps_detail_min">%d FPS</string>
+    <string name="fps_detail_low1">%d FPS</string>
+    <string name="fps_detail_samples">%d samples</string>
+    <string name="fps_label_avg">Avg</string>
+    <string name="fps_label_max">Max</string>
+    <string name="fps_label_min">Min</string>
+    <string name="fps_label_low1">1% Low</string>
+    <string name="fps_section_title">FPS</string>
+    <string name="fps_record_per_app_title">Auto-record selected apps</string>
+    <string name="fps_record_per_app_summary">Start an FPS recording automatically when a selected app is in the foreground</string>
+    <string name="fps_record_apps_title">Recording Apps</string>
+    <string name="fps_record_apps_summary">Choose apps that should be recorded automatically</string>
+    <string name="fps_record_apps_screen_title">FPS Recording Apps</string>
+    <string name="fps_record_apps_empty">No apps selected</string>
+    <string name="fps_record_apps_count">%1$d app(s) selected</string>
+    <string name="fps_action_export_csv">Export CSV</string>
+    <string name="fps_action_export_png">Export PNG</string>
+    <string name="fps_action_share_csv">Share CSV</string>
+    <string name="fps_action_share_png">Share PNG</string>
+    <string name="fps_no_session_ready">Recording is still loading</string>
+    <string name="fps_export_csv_success">CSV exported successfully</string>
+    <string name="fps_export_csv_failed">Failed to export CSV: %1$s</string>
+    <string name="fps_png_saved">Saved: %1$s</string>
+    <string name="fps_png_failed">Failed to save PNG: %1$s</string>
+    <string name="fps_share_failed">Failed to share: %1$s</string>
+    <string name="fps_csv_not_ready">CSV is not available for this session</string>
+
+    <!-- Performance Dashboard -->
+    <string name="session_package">Package: %1$s</string>
+    <string name="session_recorded">Recorded: %1$s</string>
+    <string name="session_duration">Duration: %1$s</string>
+    <string name="session_meta_format">%1$s  •  %2$s</string>
+    <string name="session_resolution">Res: %1$s</string>
+    <string name="summary_label_max">MAX</string>
+    <string name="summary_label_min">MIN</string>
+    <string name="summary_label_average">AVERAGE</string>
+    <string name="summary_label_1p_low" formatted="false">1% LOW</string>
+    <string name="summary_label_01p_low" formatted="false">0.1% LOW</string>
+    <string name="summary_label_5p_low" formatted="false">5% LOW</string>
+    <string name="summary_unit_fps">FPS</string>
+    <string name="summary_unit_celsius">°C</string>
+    <string name="summary_unit_watt">W</string>
+    <string name="summary_na">N/A</string>
+    <string name="metric_title_battery_temp">Battery Temp (°C)</string>
+    <string name="metric_title_frame_time">Frame Time (ms)</string>
+    <string name="metric_title_cpu_usage">CPU Usage (%)</string>
+    <string name="metric_title_cpu_freq">CPU Freq (MHz)</string>
+    <string name="metric_title_cpu_temp">CPU Temp (°C)</string>
+    <string name="metric_title_gpu_usage">GPU Usage (%)</string>
+    <string name="metric_title_gpu_clock">GPU Clock (MHz)</string>
+    <string name="metric_title_gpu_temp">GPU Temp (°C)</string>
+    <string name="metric_title_ram_usage">RAM Usage (MB)</string>
+    <string name="metric_title_ram_freq">RAM Frequency (MHz)</string>
+    <string name="metric_title_ram_temp">RAM Temp (°C)</string>
+    <string name="metric_title_power">Power (W)</string>
+    <string name="metric_core_name">CPU%1$d</string>
+    <string name="metric_core_value">%1$d MHz</string>
+    <string name="metric_not_available">Not available on this device or session</string>
+    <string name="metric_stats_format">Latest %1$s   •   Avg %2$s   •   Min %3$s   •   Max %4$s</string>
+    <string name="metric_stat_latest">LATEST</string>
+    <string name="metric_stat_avg">AVERAGE</string>
+    <string name="metric_stat_min">MIN</string>
+    <string name="metric_stat_max">MAX</string>
+    <string name="metric_ram_percent">RAM usage: %1$s%% (avg %2$s%%)</string>
+    <string name="metric_per_core_avg">Per-core avg: %1$s</string>
+
     <!-- ColorPicker -->
     <string name="gamebar_default_title">Select a Color</string>
     <string name="gamebar_presets">Presets</string>

@@ -13,13 +13,12 @@ import android.provider.Settings
 import android.widget.Toast
 import androidx.preference.ListPreference
 import androidx.preference.Preference
+import androidx.preference.PreferenceManager
 import com.android.gamebar.utils.PartsCustomSeekBarPreference
 import androidx.preference.SwitchPreferenceCompat
 import com.android.settingslib.widget.MainSwitchPreference
 import com.android.gamebar.R
 import com.android.gamebar.colorpicker.ColorPreferenceCompat
-
-import java.util.Locale
 
 import com.android.settingslib.widget.SettingsBasePreferenceFragment
 
@@ -38,7 +37,6 @@ class GameBarFragment : SettingsBasePreferenceFragment() {
     private var gpuUsageSwitch: SwitchPreferenceCompat? = null
     private var gpuClockSwitch: SwitchPreferenceCompat? = null
     private var gpuTempSwitch: SwitchPreferenceCompat? = null
-    private var doubleTapCapturePref: SwitchPreferenceCompat? = null
     private var singleTapTogglePref: SwitchPreferenceCompat? = null
     private var longPressEnablePref: SwitchPreferenceCompat? = null
     private var longPressTimeoutPref: ListPreference? = null
@@ -79,7 +77,6 @@ class GameBarFragment : SettingsBasePreferenceFragment() {
         ramSpeedSwitch = findPreference("game_bar_ram_speed_enable")
         ramTempSwitch = findPreference("game_bar_ram_temp_enable")
 
-        doubleTapCapturePref = findPreference("game_bar_doubletap_capture")
         singleTapTogglePref = findPreference("game_bar_single_tap_toggle")
         longPressEnablePref = findPreference("game_bar_longpress_enable")
         longPressTimeoutPref = findPreference("game_bar_longpress_timeout")
@@ -110,6 +107,7 @@ class GameBarFragment : SettingsBasePreferenceFragment() {
     
     private fun setupExpandableCategories() {
         // Get all expandable categories by their keys
+        val recordingCategory: ExpandablePreferenceCategory? = findPreference("category_recording")
         val overlayFeaturesCategory: ExpandablePreferenceCategory? = findPreference("category_overlay_features")
         val fpsMethodCategory: ExpandablePreferenceCategory? = findPreference("category_fps_method")
         val customizationCategory: ExpandablePreferenceCategory? = findPreference("category_customization")
@@ -117,9 +115,9 @@ class GameBarFragment : SettingsBasePreferenceFragment() {
         val gestureControlsCategory: ExpandablePreferenceCategory? = findPreference("category_gesture_controls")
         val perAppCategory: ExpandablePreferenceCategory? = findPreference("category_per_app")
         
-        // Categories are collapsed by default
-        // You can expand some by default if needed, e.g.:
-        // overlayFeaturesCategory?.setExpanded(true)
+        // Recording stays open on the first page
+        recordingCategory?.setExpanded(true)
+        // Other categories are collapsed by default
     }
 
     private fun setupPerAppConfig() {
@@ -133,6 +131,99 @@ class GameBarFragment : SettingsBasePreferenceFragment() {
         fontSelectorPref?.setOnPreferenceClickListener {
             startActivity(Intent(requireContext(), GameBarFontSelectorActivity::class.java))
             true
+        }
+
+        // FPS Recording - automatic per-app recording
+        val fpsAutoRecordPref: SwitchPreferenceCompat? = findPreference("fps_record_per_app_enabled")
+        val fpsAppConfigPref: Preference? = findPreference("fps_record_app_config")
+
+        fpsAppConfigPref?.setOnPreferenceClickListener {
+            startActivity(Intent(requireContext(), FpsRecordAppConfigActivity::class.java))
+            true
+        }
+
+        fpsAutoRecordPref?.setOnPreferenceChangeListener { _, newValue ->
+            val enabled = newValue as Boolean
+            if (enabled) {
+                requireContext().startService(
+                    Intent(requireContext(), FpsRecordingBubbleService::class.java)
+                )
+            } else {
+                val bubbleEnabled = PreferenceManager.getDefaultSharedPreferences(requireContext())
+                    .getBoolean("game_bar_fps_bubble_enable", false)
+                if (!bubbleEnabled) {
+                    requireContext().stopService(
+                        Intent(requireContext(), FpsRecordingBubbleService::class.java)
+                    )
+                }
+            }
+            updateFpsAutoRecordSummary()
+            true
+        }
+        updateFpsAutoRecordSummary()
+
+        // FPS Recording - bubble switch
+        val fpsBubblePref: SwitchPreferenceCompat? = findPreference("game_bar_fps_bubble_enable")
+        fpsBubblePref?.setOnPreferenceChangeListener { _, newValue ->
+            val enabled = newValue as Boolean
+            if (enabled) {
+                if (android.provider.Settings.canDrawOverlays(requireContext())) {
+                    requireContext().startService(
+                        Intent(requireContext(), FpsRecordingBubbleService::class.java)
+                    )
+                } else {
+                    android.widget.Toast.makeText(
+                        requireContext(),
+                        R.string.overlay_permission_required,
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                    return@setOnPreferenceChangeListener false
+                }
+            } else {
+                val autoEnabled = PreferenceManager.getDefaultSharedPreferences(requireContext())
+                    .getBoolean(FpsRecordingPrefs.PREF_PER_APP_ENABLED, false)
+                if (!autoEnabled) {
+                    requireContext().stopService(
+                        Intent(requireContext(), FpsRecordingBubbleService::class.java)
+                    )
+                }
+            }
+            true
+        }
+
+        // FPS Recording - history page
+        val fpsHistoryPref: Preference? = findPreference("game_bar_fps_record_history")
+        fpsHistoryPref?.setOnPreferenceClickListener {
+            startActivity(Intent(requireContext(), FpsRecordHistoryActivity::class.java))
+            true
+        }
+
+        // About & Credits
+        val authorForkPref: Preference? = findPreference("gamebar_author_fork")
+        authorForkPref?.setOnPreferenceClickListener {
+            try {
+                startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://github.com/Bryan16-ly")))
+            } catch (e: Exception) { }
+            true
+        }
+
+        val originalDevPref: Preference? = findPreference("gamebar_original_dev")
+        originalDevPref?.setOnPreferenceClickListener {
+            try {
+                startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://github.com/Pong-Development/packages_apps_GameBar")))
+            } catch (e: Exception) { }
+            true
+        }
+    }
+
+    private fun updateFpsAutoRecordSummary() {
+        val pref: Preference? = findPreference("fps_record_app_config")
+        if (pref == null) return
+        val count = FpsRecordingPrefs.getAutoApps(requireContext()).size
+        pref.summary = if (count == 0) {
+            getString(R.string.fps_record_apps_empty)
+        } else {
+            getString(R.string.fps_record_apps_count, count)
         }
     }
 
@@ -241,10 +332,6 @@ class GameBarFragment : SettingsBasePreferenceFragment() {
     }
 
     private fun setupGesturePrefListeners() {
-        doubleTapCapturePref?.setOnPreferenceChangeListener { _, newValue ->
-            gameBar?.setDoubleTapCaptureEnabled(newValue as Boolean)
-            true
-        }
         singleTapTogglePref?.setOnPreferenceChangeListener { _, newValue ->
             gameBar?.setSingleTapToggleEnabled(newValue as Boolean)
             true
@@ -352,6 +439,10 @@ class GameBarFragment : SettingsBasePreferenceFragment() {
                 context.startService(Intent(context, GameBarMonitorService::class.java))
             } else {
                 context.stopService(Intent(context, GameBarMonitorService::class.java))
+            }
+            updateFpsAutoRecordSummary()
+            if (FpsRecordingPrefs.isPerAppEnabled(context)) {
+                context.startService(Intent(context, FpsRecordingBubbleService::class.java))
             }
         }
     }

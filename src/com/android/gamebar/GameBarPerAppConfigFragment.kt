@@ -9,7 +9,6 @@ package com.android.gamebar
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -23,8 +22,6 @@ import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceManager
 import androidx.preference.SwitchPreferenceCompat
 import com.android.gamebar.R
-
-import java.util.Locale
 
 import com.android.settingslib.widget.SettingsBasePreferenceFragment
 

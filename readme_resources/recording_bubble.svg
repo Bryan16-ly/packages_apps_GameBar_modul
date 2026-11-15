@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#111827"/>
+      <stop offset="100%" stop-color="#0b1220"/>
+    </linearGradient>
+    <linearGradient id="green" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2e7d32"/>
+      <stop offset="100%" stop-color="#1b5e20"/>
+    </linearGradient>
+    <linearGradient id="red" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d32f2f"/>
+      <stop offset="100%" stop-color="#b71c1c"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="420" rx="32" fill="url(#bg)"/>
+  <text x="600" y="64" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" font-weight="bold" fill="#ffffff">Recording Bubble</text>
+  <text x="600" y="100" text-anchor="middle" font-family="Arial, sans-serif" font-size="19" fill="#9ca3af">Floating play / stop control for FPS recording</text>
+
+  <!-- Idle bubble -->
+  <g>
+    <rect x="150" y="160" width="300" height="132" rx="66" fill="url(#green)" stroke="#4caf50" stroke-width="5"/>
+    <polygon points="275,190 275,262 340,226" fill="#ffffff"/>
+    <text x="300" y="340" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#4caf50">Idle</text>
+    <text x="300" y="372" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#cbd5e1">Tap to start recording</text>
+  </g>
+
+  <!-- Arrow -->
+  <g stroke="#64748b" stroke-width="6" fill="none">
+    <line x1="520" y1="226" x2="660" y2="226"/>
+    <polyline points="632,198 660,226 632,254"/>
+  </g>
+
+  <!-- Recording bubble -->
+  <g>
+    <rect x="750" y="160" width="300" height="132" rx="66" fill="url(#red)" stroke="#f44336" stroke-width="5"/>
+    <rect x="866" y="200" width="66" height="66" rx="8" fill="#ffffff"/>
+    <text x="900" y="340" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#f44336">Recording</text>
+    <text x="900" y="372" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#cbd5e1">Tap to stop and save</text>
+  </g>
+</svg>

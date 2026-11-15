@@ -15,21 +15,15 @@ GameBar is a comprehensive real-time performance monitoring overlay for Android 
 - **Battery Temperature** - Monitor device thermal status
 - **Customizable Overlay** - Adjustable position, size, colors, and transparency
 - **Per-App Configuration** - Auto-enable GameBar for specific applications
-- **Logging & Analytics** - Record and analyze performance data
-- **Gesture Controls** - Double-tap screenshot, long-press actions
+- **FPS Recording** - Session-based FPS logs with summary cards, graphs, and CSV/PNG export
+- **Recording Bubble** - Floating play/stop bubble for manual recording, plus auto-record for selected apps
+- **Gesture Controls** - Single-tap format toggle, long-press actions, and drag to move
 - **Device-Specific Overlays** - Easy hardware path configuration per device
 
 ## Screenshots
 
 ### GameBar Settings & Customization
 <p align="center">
-  <img src="readme_resources/settings_01.png" width="200" />
-  <img src="readme_resources/settings_02.png" width="200" />
-  <img src="readme_resources/settings_03.png" width="200" />
-  <img src="readme_resources/settings_04.png" width="200" />
-</p>
-<p align="center">
-  <img src="readme_resources/settings_05.png" width="200" />
   <img src="readme_resources/settings_06.png" width="200" />
   <img src="readme_resources/settings_07.png" width="200" />
   <img src="readme_resources/settings_08.png" width="200" />
@@ -37,8 +31,7 @@ GameBar is a comprehensive real-time performance monitoring overlay for Android 
 <p align="center">
   <img src="readme_resources/settings_09.png" width="200" />
   <img src="readme_resources/settings_10.png" width="200" />
-  <img src="readme_resources/settings_11.png" width="200" />
-  <img src="readme_resources/settings_12.png" width="200" />
+  <img src="readme_resources/settings_13.png" width="200" />
 </p>
 
 ### In-Game Overlay
@@ -53,15 +46,12 @@ GameBar is a comprehensive real-time performance monitoring overlay for Android 
   <img src="readme_resources/ingame_06.png" width="250" />
 </p>
 
-### Logging & Analytics
+### FPS Recording & Bubble
 <p align="center">
-  <img src="readme_resources/logs_01.png" width="200" />
-  <img src="readme_resources/logs_02.png" width="200" />
-  <img src="readme_resources/logs_03.png" width="200" />
+  <img src="readme_resources/fps_recording.svg" width="720" alt="FPS recording flow: bubble, saved session, and FPS Record detail" />
 </p>
 <p align="center">
-  <img src="readme_resources/logs_04.png" width="200" />
-  <img src="readme_resources/logs_05.png" width="200" />
+  <img src="readme_resources/recording_bubble.svg" width="720" alt="Recording bubble play and stop states" />
 </p>
 
 ## Requirements
@@ -194,19 +184,20 @@ Configure GameBar to automatically activate for specific apps:
 
 ### Gesture Controls
 
-- **Double-tap overlay**: Capture screenshot
-- **Single-tap**: Toggle visibility
-- **Long-press**: Configurable action (hide, screenshot, or settings)
+- **Single-tap**: Switch between full and minimal overlay formats
+- **Long-press**: Open GameBar settings
 - **Drag**: Move overlay (when draggable mode enabled)
 
-### Logging & Analytics
+### FPS Recording
 
-GameBar includes comprehensive logging features:
+GameBar records complete FPS sessions with the metrics needed for performance analysis:
 
-- **Global Logging**: Record all system metrics continuously
-- **Per-App Logging**: Separate logs for each configured app
-- **Analytics**: View FPS distribution, frame time graphs, temperature charts
-- **Export**: Share logs as CSV files
+- **Auto-record selected apps**: Start a session automatically when a configured app is in the foreground
+- **Recording bubble**: Tap the floating play button to start; it turns into a stop button while recording
+- **FPS Record**: Browse saved sessions, open the detail dashboard, and compare FPS, CPU, GPU, RAM, temperature, and power data
+- **Export**: Export or share each session as CSV, and export or share the dashboard as PNG
+
+All sessions are saved under `Documents/GameBar/FPSRecordings/{package}/`, with an app-specific fallback when shared storage is unavailable. Sessions are kept until you delete them manually.
 
 ## SELinux Policy
 
@@ -214,7 +205,7 @@ GameBar includes SELinux policies for:
 - Access to sysfs nodes (thermal, kgsl, drm)
 - Overlay window permissions
 - System service interactions
-- File provider for log sharing
+- File provider for CSV and PNG sharing
 
 Policies are automatically included via `sepolicy/SEPolicy.mk`.
 
@@ -222,8 +213,8 @@ Policies are automatically included via `sepolicy/SEPolicy.mk`.
 
 Required permissions (granted automatically as system app):
 - `SYSTEM_ALERT_WINDOW` - Overlay display
-- `PACKAGE_USAGE_STATS` - Foreground app detection
-- `WRITE_EXTERNAL_STORAGE` - Log file storage
+- `PACKAGE_USAGE_STATS` - Foreground app detection for auto-recording
+- `WRITE_EXTERNAL_STORAGE` - Recording CSV storage
 - `ACCESS_SURFACE_FLINGER` - FPS measurement
 - `WRITE_SECURE_SETTINGS` - Configuration persistence
 
@@ -243,6 +234,12 @@ Required permissions (granted automatically as system app):
 - Adjust divider values in config.xml
 - Most devices use 1000 (millidegrees) or 10 (decidegrees)
 - Test: `adb shell cat <temp_path>` and divide manually
+
+### Recording issues
+- Make sure Usage Access is granted for automatic recording
+- Check that the target app is enabled under **Recording → Recording Apps**
+- For manual recording, enable **Recording bubble** and tap the play button
+- Recordings are saved even when the overlay is hidden; the bubble can run independently
 
 ### Build errors
 - Ensure `org.lineageos.settings.resources` is available in your ROM
@@ -279,17 +276,16 @@ limitations under the License.
 
 ## Credits
 
-- Original concept inspired by various gaming overlays
-- Built for LineageOS and AOSP-based ROMs
-- Community contributions welcome
+- **Fork Maintainer & Module Packaging**: [Bryan16](https://github.com/Bryan16-ly)
+- **Original Project**: [Pong-Development/packages_apps_GameBar](https://github.com/Pong-Development/packages_apps_GameBar) & [kenway214](https://github.com/kenway214)
+- Built for LineageOS, AOSP, and systemless root (KernelSU / Magisk / APatch)
 - [ColorPicker](https://github.com/jaredrummler/ColorPicker)
 
 ## Support
 
-- **Issues**: [GitHub Issues](https://github.com/kenway214/packages_apps_GameBar/issues)
-- **XDA Thread**: *Coming soon*
-- **Telegram**: [Pandemonium](https://t.me/pandemonium_haydn)
+- **Fork Repository**: [https://github.com/Bryan16-ly](https://github.com/Bryan16-ly)
+- **Original Issues**: [Pong-Development GitHub Issues](https://github.com/Pong-Development/packages_apps_GameBar/issues)
 
 ---
 
-**Note**: This is a system application that requires privileged access. It must be built as part of your ROM and cannot be installed as a regular APK.
+**Note**: Starting from the latest refactor, the **GameBar APK is installed independently** via Android Package Manager (`bash install_apk.sh`), while the **KernelSU / Magisk / APatch module** (`out/GameBar-Module-v1.0.zip`) provides SELinux rules and hardware sysfs node access. If the root module is disabled or removed, the GameBar application remains installed and functional without getting uninstalled or crashing. Package name is `com.android.gamebar.fork` for safe coexistence with ROM-bundled versions.

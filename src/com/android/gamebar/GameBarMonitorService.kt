@@ -22,7 +22,6 @@ class GameBarMonitorService : Service() {
 
     private var lastForegroundApp = ""
     private var lastGameBarState = false
-    private val perAppLogManager = PerAppLogManager.getInstance()
 
     companion object {
         private const val MONITOR_INTERVAL = 2000L // 2 seconds
@@ -100,15 +99,6 @@ class GameBarMonitorService : Service() {
                 } else if (!shouldShow && lastGameBarState) {
                     GameBar.getInstance(this).hide()
                     lastGameBarState = false
-                }
-                
-                // Handle per-app logging state changes
-                if (lastForegroundApp.isNotEmpty() && lastForegroundApp != "Unknown") {
-                    perAppLogManager.onAppWentToBackground(this, lastForegroundApp)
-                }
-                
-                if (foreground.isNotEmpty() && foreground != "Unknown") {
-                    perAppLogManager.onAppBecameForeground(this, foreground)
                 }
                 
                 lastForegroundApp = foreground

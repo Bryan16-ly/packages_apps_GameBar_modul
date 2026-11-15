@@ -247,12 +247,6 @@
             android:defaultValue="true" />
 
         <SwitchPreferenceCompat
-            android:key="game_bar_doubletap_capture"
-            android:title="Enable Double Tap to Capture"
-            android:summary="Double-tap overlay to start/stop capture logs"
-            android:defaultValue="true" />
-
-        <SwitchPreferenceCompat
             android:key="game_bar_longpress_enable"
             android:title="Enable Long Press"
             android:summary="Long-press overlay to access GameBar settings"
@@ -282,6 +276,55 @@
             android:key="game_bar_per_app_config"
             android:title="Configure Apps"
             android:summary="Choose which apps will auto-enable GameBar" />
+    </com.android.gamebar.ExpandablePreferenceCategory>
+
+    <com.android.gamebar.ExpandablePreferenceCategory
+        android:key="category_recording"
+        android:title="@string/recording_category_title">
+
+        <SwitchPreferenceCompat
+            android:key="fps_record_per_app_enabled"
+            android:title="@string/fps_record_per_app_title"
+            android:summary="@string/fps_record_per_app_summary"
+            android:defaultValue="false" />
+
+        <Preference
+            android:key="fps_record_app_config"
+            android:title="@string/fps_record_apps_title"
+            android:summary="@string/fps_record_apps_summary" />
+
+        <SwitchPreferenceCompat
+            android:key="game_bar_fps_bubble_enable"
+            android:title="@string/fps_bubble_title"
+            android:summary="@string/fps_bubble_summary"
+            android:defaultValue="false" />
+
+        <Preference
+            android:key="game_bar_fps_record_history"
+            android:title="@string/fps_record_title"
+            android:summary="@string/fps_record_summary" />
+
+    </com.android.gamebar.ExpandablePreferenceCategory>
+
+    <com.android.gamebar.ExpandablePreferenceCategory
+        android:key="category_about"
+        android:title="About &amp; Credits">
+
+        <Preference
+            android:key="gamebar_author_fork"
+            android:title="Fork Developer"
+            android:summary="Bryan16 (github.com/Bryan16-ly)" />
+
+        <Preference
+            android:key="gamebar_original_dev"
+            android:title="Original GameBar Project"
+            android:summary="Pong-Development &amp; kenway214 (github.com/Pong-Development/packages_apps_GameBar)" />
+
+        <Preference
+            android:key="gamebar_version"
+            android:title="Version"
+            android:summary="v1.0 (Standalone Fork)" />
+
     </com.android.gamebar.ExpandablePreferenceCategory>
 
 </PreferenceScreen>

@@ -35,5 +35,14 @@ class GameBarBootReceiver : BroadcastReceiver() {
             val monitorIntent = Intent(context, GameBarMonitorService::class.java)
             context.startService(monitorIntent)
         }
+
+        val bubbleEnabled = prefs.getBoolean("game_bar_fps_bubble_enable", false)
+        if (bubbleEnabled || FpsRecordingPrefs.isPerAppEnabled(context)) {
+            try {
+                context.startService(Intent(context, FpsRecordingBubbleService::class.java))
+            } catch (e: Exception) {
+                android.util.Log.w("GameBarBootReceiver", "Unable to restore FPS recording service", e)
+            }
+        }
     }
 }

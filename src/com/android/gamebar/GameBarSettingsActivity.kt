@@ -20,7 +20,6 @@ class GameBarSettingsActivity : CollapsingToolbarBaseActivity() {
     
     companion object {
         private const val OVERLAY_PERMISSION_REQUEST_CODE = 1234
-        private const val REQUEST_CODE_OPEN_CSV = 1001
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,13 +47,6 @@ class GameBarSettingsActivity : CollapsingToolbarBaseActivity() {
                     Toast.makeText(this, R.string.overlay_permission_denied, Toast.LENGTH_SHORT).show()
                 }
             }
-            REQUEST_CODE_OPEN_CSV -> {
-                if (resultCode == RESULT_OK) {
-                    data?.data?.also { uri ->
-                        handleExternalLogFile(uri)
-                    }
-                }
-            }
         }
     }
     
@@ -65,19 +57,6 @@ class GameBarSettingsActivity : CollapsingToolbarBaseActivity() {
     
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.menu_log_monitor -> {
-                try {
-                    startActivity(Intent(this, GameBarLogActivity::class.java))
-                } catch (e: Exception) {
-                    Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_LONG).show()
-                    e.printStackTrace()
-                }
-                true
-            }
-            R.id.menu_open_external_log -> {
-                openExternalLogFile()
-                true
-            }
             R.id.menu_user_guide -> {
                 try {
                     val url = getString(R.string.game_bar_user_guide_url)
@@ -90,44 +69,6 @@ class GameBarSettingsActivity : CollapsingToolbarBaseActivity() {
                 true
             }
             else -> super.onOptionsItemSelected(item)
-        }
-    }
-    
-    private fun openExternalLogFile() {
-        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-            addCategory(Intent.CATEGORY_OPENABLE)
-            type = "text/*"
-            putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("text/csv", "text/comma-separated-values", "text/plain"))
-        }
-        
-        try {
-            startActivityForResult(intent, REQUEST_CODE_OPEN_CSV)
-        } catch (e: Exception) {
-            Toast.makeText(this, "File picker not available: ${e.message}", Toast.LENGTH_LONG).show()
-        }
-    }
-    
-    private fun handleExternalLogFile(uri: Uri) {
-        try {
-            // Copy file content to temporary location
-            val inputStream = contentResolver.openInputStream(uri)
-            val tempFile = java.io.File(cacheDir, "temp_external_log.csv")
-            
-            inputStream?.use { input ->
-                tempFile.outputStream().use { output ->
-                    input.copyTo(output)
-                }
-            }
-            
-            // Open analytics activity with this file
-            val intent = Intent(this, LogAnalyticsActivity::class.java).apply {
-                putExtra(LogAnalyticsActivity.EXTRA_LOG_FILE_PATH, tempFile.absolutePath)
-                putExtra(LogAnalyticsActivity.EXTRA_LOG_FILE_NAME, uri.lastPathSegment ?: "External Log")
-            }
-            startActivity(intent)
-        } catch (e: Exception) {
-            Toast.makeText(this, "Error opening file: ${e.message}", Toast.LENGTH_LONG).show()
-            e.printStackTrace()
         }
     }
 }
