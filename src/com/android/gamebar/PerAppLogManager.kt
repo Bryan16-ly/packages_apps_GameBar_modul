@@ -286,7 +286,13 @@ class PerAppLogManager private constructor() {
     }
 
     private fun toCsvLine(columns: Array<String>): String {
-        return columns.joinToString(",")
+        return columns.joinToString(",") { value ->
+            if (value.contains(',') || value.contains('"') || value.contains('\n') || value.contains('\r')) {
+                "\"" + value.replace("\"", "\"\"") + "\""
+            } else {
+                value
+            }
+        }
     }
 
     fun getPerAppLogFiles(packageName: String): List<File> {

@@ -79,6 +79,45 @@ data class PowerStatistics(
     val avgPower: Double
 ) : Serializable
 
+private enum class MetricColumn {
+    DATETIME,
+    PACKAGE_NAME,
+    FPS,
+    FRAME_TIME,
+    BATTERY_TEMP,
+    CPU_USAGE,
+    CPU_CLOCK,
+    CPU_TEMP,
+    RAM_USAGE,
+    RAM_USAGE_PCT,
+    RAM_SPEED,
+    RAM_TEMP,
+    GPU_USAGE,
+    GPU_CLOCK,
+    GPU_TEMP,
+    BATTERY_LEVEL,
+    POWER,
+    APP_RAM_USAGE,
+    UNKNOWN,
+}
+
+private val LEGACY_COLUMNS = listOf(
+    MetricColumn.DATETIME,
+    MetricColumn.PACKAGE_NAME,
+    MetricColumn.FPS,
+    MetricColumn.FRAME_TIME,
+    MetricColumn.BATTERY_TEMP,
+    MetricColumn.CPU_USAGE,
+    MetricColumn.CPU_CLOCK,
+    MetricColumn.CPU_TEMP,
+    MetricColumn.RAM_USAGE,
+    MetricColumn.RAM_SPEED,
+    MetricColumn.RAM_TEMP,
+    MetricColumn.GPU_USAGE,
+    MetricColumn.GPU_CLOCK,
+    MetricColumn.GPU_TEMP,
+)
+
 class PerAppLogReader {
 
     companion object {
@@ -108,6 +147,252 @@ class PerAppLogReader {
      * Read and analyze a log file
      */
     fun analyzeLogFile(logFilePath: String): LogAnalytics? {
+        return analyzeLogFileRobust(logFilePath) ?: analyzeLogFileLegacy(logFilePath)
+    }
+
+    private fun analyzeLogFileRobust(logFilePath: String): LogAnalytics? {
+        return try {
+            val file = File(logFilePath)
+            if (!file.exists() || !file.canRead()) return null
+
+            val fpsValues = mutableListOf<Double>()
+            val fpsTimeData = mutableListOf<Pair<Long, Double>>()
+            val frameTimeValues = mutableListOf<Double>()
+            val frameTimeData = mutableListOf<Pair<Long, Double>>()
+            val batteryTempValues = mutableListOf<Double>()
+            val batteryTempTimeData = mutableListOf<Pair<Long, Double>>()
+            val batteryLevelTimeData = mutableListOf<Pair<Long, Double>>()
+            val cpuUsageValues = mutableListOf<Double>()
+            val cpuUsageTimeData = mutableListOf<Pair<Long, Double>>()
+            val cpuTempValues = mutableListOf<Double>()
+            val cpuTempTimeData = mutableListOf<Pair<Long, Double>>()
+            val ramUsageTimeData = mutableListOf<Pair<Long, Double>>()
+            val ramSpeedTimeData = mutableListOf<Pair<Long, Double>>()
+            val ramTempTimeData = mutableListOf<Pair<Long, Double>>()
+            val appRamUsageTimeData = mutableListOf<Pair<Long, Double>>()
+            val cpuClockTimeData = mutableMapOf<Int, MutableList<Pair<Long, Double>>>()
+            val gpuUsageValues = mutableListOf<Double>()
+            val gpuUsageTimeData = mutableListOf<Pair<Long, Double>>()
+            val gpuClockValues = mutableListOf<Double>()
+            val gpuClockTimeData = mutableListOf<Pair<Long, Double>>()
+            val gpuTempValues = mutableListOf<Double>()
+            val gpuTempTimeData = mutableListOf<Pair<Long, Double>>()
+            val powerValues = mutableListOf<Double>()
+            val powerTimeData = mutableListOf<Pair<Long, Double>>()
+            var firstTimestamp: String? = null
+            var lastTimestamp: String? = null
+            var packageName = ""
+            var lineCount = 0
+            var sessionStartTimeMs = 0L
+            var hasHeader = false
+            var columns: List<MetricColumn> = LEGACY_COLUMNS
+
+            BufferedReader(FileReader(file)).use { reader ->
+                var line = reader.readLine()
+                if (line != null) {
+                    val headerTokens = parseCsvLine(line)
+                    if (headerTokens.any { it.contains("DateTime", ignoreCase = true) }) {
+                        val parsedColumns = headerTokens.map { classifyColumn(it) }
+                        if (parsedColumns.any { it == MetricColumn.DATETIME }) {
+                            columns = parsedColumns
+                            hasHeader = true
+                            line = reader.readLine()
+                        }
+                    }
+                }
+
+                while (line != null) {
+                    lineCount++
+                    if (line.isNotBlank()) {
+                        try {
+                            val row = parseRow(parseCsvLine(line), columns)
+                            val timestampStr = row[MetricColumn.DATETIME]?.trim().orEmpty()
+                            val timestampMs = parseTimestampMillis(timestampStr)
+                            if (sessionStartTimeMs == 0L && timestampMs > 0L) {
+                                sessionStartTimeMs = timestampMs
+                            }
+                            val relativeTime = if (sessionStartTimeMs > 0L && timestampMs > 0L) {
+                                timestampMs - sessionStartTimeMs
+                            } else {
+                                lineCount * 1000L
+                            }
+
+                            fun numeric(column: MetricColumn): Double? =
+                                row[column]?.let { parseNumericValue(it) }
+
+                            numeric(MetricColumn.FPS)?.let { value ->
+                                if (isPlausible(MetricColumn.FPS, value)) {
+                                    fpsValues.add(value)
+                                    fpsTimeData.add(Pair(relativeTime, value))
+                                }
+                            }
+
+                            numeric(MetricColumn.FRAME_TIME)?.let { value ->
+                                if (isPlausible(MetricColumn.FRAME_TIME, value)) {
+                                    frameTimeValues.add(value)
+                                    frameTimeData.add(Pair(relativeTime, value))
+                                }
+                            }
+
+                            numeric(MetricColumn.BATTERY_TEMP)?.let { value ->
+                                if (isPlausible(MetricColumn.BATTERY_TEMP, value)) {
+                                    batteryTempValues.add(value)
+                                    batteryTempTimeData.add(Pair(relativeTime, value))
+                                }
+                            }
+
+                            numeric(MetricColumn.BATTERY_LEVEL)?.let { value ->
+                                if (isPlausible(MetricColumn.BATTERY_LEVEL, value)) {
+                                    batteryLevelTimeData.add(Pair(relativeTime, value))
+                                }
+                            }
+
+                            numeric(MetricColumn.CPU_USAGE)?.let { value ->
+                                if (isPlausible(MetricColumn.CPU_USAGE, value)) {
+                                    cpuUsageValues.add(value)
+                                    cpuUsageTimeData.add(Pair(relativeTime, value))
+                                }
+                            }
+
+                            numeric(MetricColumn.CPU_TEMP)?.let { value ->
+                                if (isPlausible(MetricColumn.CPU_TEMP, value)) {
+                                    cpuTempValues.add(value)
+                                    cpuTempTimeData.add(Pair(relativeTime, value))
+                                }
+                            }
+
+                            numeric(MetricColumn.RAM_USAGE)?.let { value ->
+                                if (isPlausible(MetricColumn.RAM_USAGE, value)) {
+                                    ramUsageTimeData.add(Pair(relativeTime, value))
+                                }
+                            }
+
+                            row[MetricColumn.RAM_SPEED]?.let { raw ->
+                                val value = parseRamSpeedToMhz(raw)
+                                if (value != null && isPlausible(MetricColumn.RAM_SPEED, value)) {
+                                    ramSpeedTimeData.add(Pair(relativeTime, value))
+                                }
+                            }
+
+                            numeric(MetricColumn.RAM_TEMP)?.let { value ->
+                                if (isPlausible(MetricColumn.RAM_TEMP, value)) {
+                                    ramTempTimeData.add(Pair(relativeTime, value))
+                                }
+                            }
+
+                            numeric(MetricColumn.GPU_USAGE)?.let { value ->
+                                if (isPlausible(MetricColumn.GPU_USAGE, value)) {
+                                    gpuUsageValues.add(value)
+                                    gpuUsageTimeData.add(Pair(relativeTime, value))
+                                }
+                            }
+
+                            numeric(MetricColumn.GPU_CLOCK)?.let { value ->
+                                if (isPlausible(MetricColumn.GPU_CLOCK, value)) {
+                                    gpuClockValues.add(value)
+                                    gpuClockTimeData.add(Pair(relativeTime, value))
+                                }
+                            }
+
+                            numeric(MetricColumn.GPU_TEMP)?.let { value ->
+                                if (isPlausible(MetricColumn.GPU_TEMP, value)) {
+                                    gpuTempValues.add(value)
+                                    gpuTempTimeData.add(Pair(relativeTime, value))
+                                }
+                            }
+
+                            numeric(MetricColumn.POWER)?.let { value ->
+                                if (isPlausible(MetricColumn.POWER, value)) {
+                                    powerValues.add(value)
+                                    powerTimeData.add(Pair(relativeTime, value))
+                                }
+                            }
+
+                            numeric(MetricColumn.APP_RAM_USAGE)?.let { value ->
+                                if (isPlausible(MetricColumn.APP_RAM_USAGE, value)) {
+                                    appRamUsageTimeData.add(Pair(relativeTime, value))
+                                }
+                            }
+
+                            row[MetricColumn.CPU_CLOCK]?.let { clockRaw ->
+                                clockRaw.split(";").forEach { coreData ->
+                                    try {
+                                        val cpuIdMatch = Regex("cpu\\s*(\\d+)", RegexOption.IGNORE_CASE).find(coreData)
+                                        val mhzMatch = Regex(":\\s*(\\d+)").find(coreData)
+                                            ?: Regex("(\\d+)\\s*MHz", RegexOption.IGNORE_CASE).find(coreData)
+                                        if (cpuIdMatch != null && mhzMatch != null) {
+                                            val cpuId = cpuIdMatch.groupValues[1].toInt()
+                                            val mhz = mhzMatch.groupValues[1].toDoubleOrNull()
+                                            if (mhz != null && mhz in 1.0..10000.0) {
+                                                cpuClockTimeData.getOrPut(cpuId) { mutableListOf() }
+                                                    .add(Pair(relativeTime, mhz))
+                                            }
+                                        }
+                                    } catch (_: Exception) {
+                                    }
+                                }
+                            }
+
+                            if (firstTimestamp == null) {
+                                firstTimestamp = timestampStr
+                                packageName = row[MetricColumn.PACKAGE_NAME]?.trim().orEmpty()
+                            }
+                            if (timestampStr.isNotEmpty()) {
+                                lastTimestamp = timestampStr
+                            }
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Error parsing line $lineCount: $line", e)
+                        }
+                    }
+                    line = reader.readLine()
+                }
+            }
+
+            if (!hasHeader || fpsValues.isEmpty()) {
+                return null
+            }
+
+            val fpsStats = calculateFpsStatistics(fpsValues)
+            val cpuStats = calculateCpuStatistics(cpuUsageValues, cpuTempValues)
+            val gpuStats = calculateGpuStatistics(gpuUsageValues, gpuClockValues, gpuTempValues)
+            val powerStats = calculatePowerStatistics(powerValues)
+            val sessionDuration = calculateSessionDuration(firstTimestamp, lastTimestamp)
+            val sessionDate = extractSessionDate(file.name)
+            val resolutionStr = extractSessionResolution(file.name)
+
+            LogAnalytics(
+                fpsStats = fpsStats,
+                cpuStats = cpuStats,
+                gpuStats = gpuStats,
+                powerStats = powerStats,
+                sessionDuration = sessionDuration,
+                totalSamples = fpsValues.size,
+                appName = packageName,
+                sessionDate = sessionDate,
+                resolution = resolutionStr,
+                fpsTimeData = fpsTimeData,
+                frameTimeData = frameTimeData,
+                batteryTempTimeData = batteryTempTimeData,
+                batteryLevelTimeData = batteryLevelTimeData,
+                cpuUsageTimeData = cpuUsageTimeData,
+                cpuTempTimeData = cpuTempTimeData,
+                ramUsageTimeData = ramUsageTimeData,
+                ramSpeedTimeData = ramSpeedTimeData,
+                ramTempTimeData = ramTempTimeData,
+                appRamUsageTimeData = appRamUsageTimeData,
+                cpuClockTimeData = cpuClockTimeData,
+                gpuUsageTimeData = gpuUsageTimeData,
+                gpuTempTimeData = gpuTempTimeData,
+                gpuClockTimeData = gpuClockTimeData,
+                powerTimeData = powerTimeData
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "Error analyzing log file: $logFilePath", e)
+            null
+        }
+    }
+
+    private fun analyzeLogFileLegacy(logFilePath: String): LogAnalytics? {
         return try {
             val file = File(logFilePath)
             if (!file.exists() || !file.canRead()) {
@@ -531,6 +816,156 @@ class PerAppLogReader {
         } catch (e: Exception) {
             Log.e(TAG, "Error analyzing log file: $logFilePath", e)
             null
+        }
+    }
+
+    private fun parseTimestampMillis(raw: String): Long {
+        if (raw.isBlank()) return 0L
+        return try {
+            val formats = arrayOf("yyyy-MM-dd HH:mm:ss.SSS", "yyyy-MM-dd HH:mm:ss")
+            for (pattern in formats) {
+                val format = java.text.SimpleDateFormat(pattern, java.util.Locale.getDefault())
+                val parsed = format.parse(raw)
+                if (parsed != null) return parsed.time
+            }
+            0L
+        } catch (_: Exception) {
+            0L
+        }
+    }
+
+    private fun classifyColumn(header: String): MetricColumn {
+        val normalized = header.trim().removePrefix("\uFEFF").lowercase()
+        return when {
+            normalized == "datetime" -> MetricColumn.DATETIME
+            normalized.contains("package") -> MetricColumn.PACKAGE_NAME
+            normalized == "fps" -> MetricColumn.FPS
+            normalized.contains("frame_time") -> MetricColumn.FRAME_TIME
+            normalized.contains("battery_temp") -> MetricColumn.BATTERY_TEMP
+            normalized == "cpu_usage" -> MetricColumn.CPU_USAGE
+            normalized.contains("cpu_clock") -> MetricColumn.CPU_CLOCK
+            normalized == "cpu_temp" -> MetricColumn.CPU_TEMP
+            normalized.contains("ram_usage_pct") -> MetricColumn.RAM_USAGE_PCT
+            normalized == "ram_usage_mb" || normalized == "ram_usage" -> MetricColumn.RAM_USAGE
+            normalized.contains("ram_speed") -> MetricColumn.RAM_SPEED
+            normalized == "ram_temp" -> MetricColumn.RAM_TEMP
+            normalized == "gpu_usage" -> MetricColumn.GPU_USAGE
+            normalized.contains("gpu_clock") -> MetricColumn.GPU_CLOCK
+            normalized == "gpu_temp" -> MetricColumn.GPU_TEMP
+            normalized == "battery_level" -> MetricColumn.BATTERY_LEVEL
+            normalized.contains("power") -> MetricColumn.POWER
+            normalized.contains("app_ram") -> MetricColumn.APP_RAM_USAGE
+            else -> MetricColumn.UNKNOWN
+        }
+    }
+
+    private fun parseCsvLine(line: String): List<String> {
+        val values = mutableListOf<String>()
+        val buffer = StringBuilder()
+        var inQuotes = false
+        var index = 0
+        while (index < line.length) {
+            val char = line[index]
+            when {
+                char == '"' -> {
+                    if (inQuotes && index + 1 < line.length && line[index + 1] == '"') {
+                        buffer.append('"')
+                        index++
+                    } else {
+                        inQuotes = !inQuotes
+                    }
+                }
+                char == ',' && !inQuotes -> {
+                    values.add(buffer.toString())
+                    buffer.setLength(0)
+                }
+                else -> buffer.append(char)
+            }
+            index++
+        }
+        values.add(buffer.toString())
+        return values
+    }
+
+    private fun parseRow(tokens: List<String>, columns: List<MetricColumn>): Map<MetricColumn, String> {
+        val row = mutableMapOf<MetricColumn, String>()
+        var tokenIndex = 0
+
+        columns.forEachIndexed { columnIndex, column ->
+            if (tokenIndex >= tokens.size) return@forEachIndexed
+
+            val remainingColumns = columns.size - columnIndex
+            val remainingTokens = tokens.size - tokenIndex
+            val token = tokens[tokenIndex].trim()
+            var value = token
+            var consumed = 1
+
+            if (remainingTokens > remainingColumns && decimalSuffixLength(column) > 0 && tokenIndex + 1 < tokens.size) {
+                val merged = mergeDecimal(token, tokens[tokenIndex + 1].trim(), column)
+                if (merged != null) {
+                    value = merged
+                    consumed = 2
+                }
+            }
+
+            row[column] = value
+            tokenIndex += consumed
+        }
+
+        return row
+    }
+
+    private fun decimalSuffixLength(column: MetricColumn): Int {
+        return when (column) {
+            MetricColumn.FRAME_TIME -> 2
+            MetricColumn.BATTERY_TEMP,
+            MetricColumn.CPU_TEMP,
+            MetricColumn.GPU_TEMP,
+            MetricColumn.RAM_TEMP -> 1
+            MetricColumn.POWER -> 3
+            MetricColumn.RAM_SPEED -> 3
+            else -> 0
+        }
+    }
+
+    private fun mergeDecimal(integerToken: String, suffixToken: String, column: MetricColumn): String? {
+        if (integerToken.isEmpty() || integerToken.any { it == '.' || it == ',' || it.isLetter() }) return null
+        if (!integerToken.all { it.isDigit() || it == '-' }) return null
+
+        val expectedDigits = decimalSuffixLength(column)
+        val digitMatch = Regex("^(\\d+)").find(suffixToken) ?: return null
+        val digits = digitMatch.groupValues[1]
+        if (digits.length != expectedDigits) return null
+
+        val rest = suffixToken.substring(digits.length).trim()
+        val unitAllowed = when (column) {
+            MetricColumn.RAM_SPEED -> rest.isEmpty() || rest.equals("GHz", ignoreCase = true)
+            MetricColumn.RAM_TEMP -> rest.isEmpty() || rest == "°C" || rest == "C"
+            else -> rest.isEmpty()
+        }
+        if (!unitAllowed) return null
+
+        return "$integerToken.$digits${if (rest.isEmpty()) "" else " $rest"}"
+    }
+
+    private fun isPlausible(column: MetricColumn, value: Double): Boolean {
+        if (value.isNaN() || value.isInfinite()) return false
+        return when (column) {
+            MetricColumn.FPS -> value > 0.0 && value <= 1000.0
+            MetricColumn.FRAME_TIME -> value > 0.0 && value <= 1000.0
+            MetricColumn.BATTERY_TEMP -> value in -20.0..70.0
+            MetricColumn.CPU_USAGE -> value in 0.0..100.0
+            MetricColumn.CPU_TEMP -> value in -20.0..150.0
+            MetricColumn.RAM_USAGE -> value in 0.0..131072.0
+            MetricColumn.RAM_SPEED -> value in 0.0..20000.0
+            MetricColumn.RAM_TEMP -> value in -20.0..150.0
+            MetricColumn.GPU_USAGE -> value in 0.0..100.0
+            MetricColumn.GPU_CLOCK -> value in 10.0..20000.0
+            MetricColumn.GPU_TEMP -> value in -20.0..150.0
+            MetricColumn.BATTERY_LEVEL -> value in 0.0..100.0
+            MetricColumn.POWER -> value in 0.0..50.0
+            MetricColumn.APP_RAM_USAGE -> value in 0.0..131072.0
+            else -> true
         }
     }
 

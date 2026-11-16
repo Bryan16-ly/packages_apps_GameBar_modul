@@ -453,7 +453,7 @@ object FpsRecordImageGenerator {
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = p.card }
         canvas.drawRoundRect(rect, 30f, 30f, paint)
 
-        val maxTemp = max(analytics.cpuStats.maxTemp.toFloat(), analytics.gpuStats.maxTemp.toFloat())
+        val maxTemp = analytics.batteryTempTimeData.maxOfOrNull { it.second.toFloat() } ?: 0f
         val fpsValues = analytics.fpsTimeData.map { it.second.toFloat() }.sorted()
         val low5 = averageSlowestPercent(fpsValues, 0.05f)
         val items = listOf(

@@ -24,13 +24,13 @@ GameBar is a comprehensive real-time performance monitoring overlay for Android 
 
 ### GameBar Settings & Customization
 <p align="center">
-  <img src="readme_resources/settings_06.png" width="200" />
-  <img src="readme_resources/settings_07.png" width="200" />
-  <img src="readme_resources/settings_08.png" width="200" />
+  <img src="readme_resources/settings_01.png" width="200" />
+  <img src="readme_resources/settings_02.png" width="200" />
+  <img src="readme_resources/settings_03.png" width="200" />
 </p>
 <p align="center">
-  <img src="readme_resources/settings_09.png" width="200" />
-  <img src="readme_resources/settings_10.png" width="200" />
+  <img src="readme_resources/settings_04.png" width="200" />
+  <img src="readme_resources/settings_05.png" width="200" />
   <img src="readme_resources/settings_13.png" width="200" />
 </p>
 

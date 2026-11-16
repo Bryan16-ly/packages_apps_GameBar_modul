@@ -1057,7 +1057,7 @@ private fun FpsRecordDetailScreen(
 
 @Composable
 private fun StatsGrid(analytics: LogAnalytics) {
-    val maxTemp = max(analytics.cpuStats.maxTemp.toFloat(), analytics.gpuStats.maxTemp.toFloat())
+    val maxTemp = analytics.batteryTempTimeData.maxOfOrNull { it.second.toFloat() } ?: 0f
     val fpsValues = analytics.fpsTimeData.map { it.second.toFloat() }.sorted()
     val low5 = averageSlowestPercent(fpsValues, 0.05f)
 
